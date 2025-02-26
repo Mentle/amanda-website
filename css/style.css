@@ -1190,7 +1190,7 @@ body:not(.scrolled) .social-link {
     .intro-text {
         left: 50%;
         transform: translateX(-50%);
-        max-width: 90vw;
+        min-width: 80vw;
         text-align: center;
     }
 }
