@@ -1192,5 +1192,6 @@ body:not(.scrolled) .social-link {
         transform: translateX(-50%);
         min-width: 80vw;
         text-align: center;
+        line-height: 1.3;
     }
 }
