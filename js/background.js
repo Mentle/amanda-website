@@ -101,21 +101,21 @@ class BackgroundAnimation {
         // Basic event listeners (model rotation, scroll, resize)
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
         window.addEventListener('touchmove', (e) => {
-            e.preventDefault();
+            if (this.scrollProgress < 0.1) return; // Don't interact before scroll
             const touch = e.touches[0];
             this.onMouseMove({
                 clientX: touch.clientX,
                 clientY: touch.clientY
             });
-        }, { passive: false });
+        });
         window.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+            if (this.scrollProgress < 0.1) return; // Don't interact before scroll
             const touch = e.touches[0];
             this.onMouseMove({
                 clientX: touch.clientX,
                 clientY: touch.clientY
             });
-        }, { passive: false });
+        });
         window.addEventListener('resize', this.onWindowResize.bind(this));
         window.addEventListener('scroll', this.handleScroll.bind(this));
 
