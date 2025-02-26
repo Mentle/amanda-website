@@ -1184,3 +1184,13 @@ body:not(.scrolled) .social-link {
     max-width: 800px;
     margin: 1rem auto;
 }
+
+/* Mobile-specific styles for intro text */
+@media screen and (max-width: 768px) {
+    .intro-text {
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 80vw;
+        text-align: center;
+    }
+}
