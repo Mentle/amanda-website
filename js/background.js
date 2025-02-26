@@ -13,9 +13,9 @@ class BackgroundAnimation {
             canvas: document.getElementById('background-canvas')
         });
 
-        // Make the canvas interactive (if you still need mousemove for model rotation)
-        this.renderer.domElement.style.pointerEvents = 'none';
-        document.getElementById('background-canvas').style.pointerEvents = 'none';
+        // Make the canvas interactive
+        this.renderer.domElement.style.pointerEvents = 'auto';
+        document.getElementById('background-canvas').style.pointerEvents = 'auto';
 
         this.container = document.getElementById('background-canvas');
 
@@ -100,6 +100,22 @@ class BackgroundAnimation {
 
         // Basic event listeners (model rotation, scroll, resize)
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            this.onMouseMove({
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+        }, { passive: false });
+        window.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            this.onMouseMove({
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+        }, { passive: false });
         window.addEventListener('resize', this.onWindowResize.bind(this));
         window.addEventListener('scroll', this.handleScroll.bind(this));
 
@@ -197,7 +213,7 @@ class BackgroundAnimation {
             this.renderer.domElement.style.pointerEvents = 'auto';
         } else {
             document.body.classList.remove('scrolled');
-            this.renderer.domElement.style.pointerEvents = 'none';
+            this.renderer.domElement.style.pointerEvents = 'auto';
         }
 
         // Text fade out (0-40% scroll)
