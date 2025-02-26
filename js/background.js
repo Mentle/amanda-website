@@ -323,7 +323,7 @@ class BackgroundAnimation {
             
             if (this.textScatterDirection === 'out') {
                 this.textScatterProgress = Math.min(1, this.textScatterProgress + 0.015); // Reduced from 0.03
-                if (this.textScatterProgress >= 1) {
+                if (this.textScatterProgress >= 0.60) {
                     if (this.activeWindowId) {
                         this.showWindow(this.activeWindowId);
                     }
@@ -1084,10 +1084,43 @@ class BackgroundAnimation {
 
     preventBackgroundScroll(e) {
         if (document.body.classList.contains('window-open')) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+            // Check if the event originated from a content window
+            const path = e.composedPath ? e.composedPath() : e.path;
+            const isFromWindow = path.some(el => el.classList && el.classList.contains('content-window'));
+            
+            if (!isFromWindow) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
         }
+    }
+
+    showWindow(windowId) {
+        const window = document.getElementById(windowId);
+        window.style.display = 'block';
+        
+        // Hide point cloud
+        if (this.model) {
+            this.model.visible = false;
+        }
+
+        // Force scroll to bottom
+        requestAnimationFrame(() => {
+            document.documentElement.scrollTop = document.documentElement.scrollHeight;
+            document.documentElement.style.setProperty('--scroll-top', `${document.documentElement.scrollHeight - document.documentElement.clientHeight}px`);
+        });
+        
+        // Trigger reflow
+        window.offsetHeight;
+        window.classList.add('visible');
+        document.body.classList.add('window-open');
+        document.documentElement.classList.add('window-open');
+        
+        // Add global scroll prevention only for background
+        document.addEventListener('wheel', this.windowScrollHandler, { passive: false });
+        document.addEventListener('touchmove', this.windowScrollHandler, { passive: false });
+        document.addEventListener('scroll', this.windowScrollHandler, { passive: false });
     }
 
     // Add method for handling text clicks
@@ -1161,36 +1194,17 @@ class BackgroundAnimation {
     }
 
     // Update window display methods
-    showWindow(windowId) {
-        const window = document.getElementById(windowId);
-        window.style.display = 'block';
-        
-        // Set scroll position CSS variable
-        document.documentElement.style.setProperty('--scroll-top', `${window.scrollY}px`);
-        
-        // Trigger reflow
-        window.offsetHeight;
-        window.classList.add('visible');
-        document.body.classList.add('window-open');
-        
-        // Add global scroll prevention
-        document.addEventListener('wheel', this.windowScrollHandler, { passive: false });
-        document.addEventListener('touchmove', this.windowScrollHandler, { passive: false });
-        document.addEventListener('scroll', this.windowScrollHandler, { passive: false });
-    }
-
     closeWindow(windowId) {
         const window = document.getElementById(windowId);
         window.classList.remove('visible');
         document.body.classList.remove('window-open');
+        document.documentElement.classList.remove('window-open');
         
-        // Remove scroll event listeners
-        if (window._preventScrollHandler) {
-            window.removeEventListener('wheel', window._preventScrollHandler);
-            window.removeEventListener('touchmove', window._preventScrollHandler);
-            delete window._preventScrollHandler;
+        // Show point cloud
+        if (this.model) {
+            this.model.visible = true;
         }
-        
+
         // Remove global scroll prevention
         document.removeEventListener('wheel', this.windowScrollHandler);
         document.removeEventListener('touchmove', this.windowScrollHandler);
