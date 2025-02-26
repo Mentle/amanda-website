@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amanda Michelena</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Italiana&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
+    <script src="js/PLYLoader.js"></script>
+    <script src="js/dat.gui.min.js"></script>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+            <!-- Theme toggle button -->
+        <button class="theme-toggle" aria-label="Toggle theme">
+            <i class="fas fa-moon"></i>
+        </button>
+            
+    <nav class="navigation">
+        <div class="nav-content">
+            <div class="logo">AMANDA MICHELENA</div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="intro-text">
+                <span class="greeting">¡Hola! </span>I am a Creative Producer for fashion and luxury. I spend most of my time researching, creating and sharing beautiful content related to my biggest obsessions: <em>Fashion, Food and Flowers</em>
+            </div>
+            <div class="social-links">
+                <a href="mailto:amandamichelena@gmail.com" class="social-link">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                <a href="https://instagram.com/amandamichelena" target="_blank" rel="noopener noreferrer" class="social-link">
+                    <i class="fab fa-instagram"></i>
+                </a>
+            </div>
+            <div class="scroll-indicator">
+                Scroll Down For More
+                <div class="arrow-down">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="scroll-spacer"></div>
+
+    <main style="display: none">
+        <section id="about" class="about-section">
+            <h2>ABOUT</h2>
+            <div class="profile-container">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <img src="images/amanda.png" alt="Amanda Michelena" class="profile-image">
+                    </div>
+                    <div class="card-back">
+                        <div class="card-back-content">
+                            <div class="monogram">VM</div>
+                            <div class="pattern"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p>
+                I am a fashion designer and creative director based in Paris, France. With a deep passion for avant-garde design and sustainable fashion, I create pieces that challenge conventional aesthetics while respecting our environment. My work combines traditional craftsmanship with innovative techniques, resulting in unique garments that tell a story of elegance and consciousness.
+            </p>
+        </section>
+
+        <section id="projects" class="projects-section">
+            <h2>PROJECTS</h2>
+            <div class="project-grid">
+                <article class="project-card">
+                    <img src="images/project1.jpg" alt="Project 1">
+                    <h3>ETHEREAL COLLECTION</h3>
+                    <p>A sustainable luxury collection inspired by natural phenomena.</p>
+                </article>
+                <article class="project-card">
+                    <img src="images/project2.jpg" alt="Project 2">
+                    <h3>METAMORPHOSIS</h3>
+                    <p>Experimental pieces exploring transformation in fashion.</p>
+                </article>
+                <article class="project-card">
+                    <img src="images/project3.jpg" alt="Project 3">
+                    <h3>DIGITAL FASHION</h3>
+                    <p>Virtual couture pushing the boundaries of digital design.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="contact" class="contact-section">
+            <h2>CONTACT</h2>
+            <div class="contact-content">
+                <p>Let's create something extraordinary together.</p>
+                <div class="contact-links">
+                    <a href="mailto:hello@amandamichelena.com">hello@amandamichelena.com</a>
+                    <a href="https://instagram.com/amandamichelena" target="_blank">Instagram</a>
+                    <a href="https://linkedin.com/in/amandamichelena" target="_blank">LinkedIn</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="about-modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h2>ABOUT</h2>
+            <div class="about-text">
+                <p>Amanda Michelena is a fashion designer and creative director based in Paris, France. With a passion for sustainable fashion and innovative design, she creates pieces that blend contemporary aesthetics with timeless elegance.</p>
+                <p>Her work has been featured in Vogue, Elle, and various international fashion weeks. She believes in creating fashion that not only looks beautiful but also tells a story and respects our environment.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="contact-modal">
+        <div class="modal-content">
+            <button class="close-modal">&times;</button>
+            <h2>CONTACT</h2>
+            <form class="contact-form">
+                <input type="text" placeholder="Name" required>
+                <input type="email" placeholder="Email" required>
+                <textarea placeholder="Message" required></textarea>
+                <button type="submit">SEND</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="about-window" class="content-window">
+        <button class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2>ABOUT</h2>
+        <img src="images/profile.jpg" alt="Amanda's Profile" class="about-image">
+        <p>I am a fashion designer and creative director with a deep passion for avant-garde design and sustainable fashion. My work combines traditional craftsmanship with innovative techniques, resulting in unique pieces that tell a story of elegance and consciousness.</p>
+        <p>With years of experience in the luxury fashion industry, I've developed a keen eye for detail and a strong understanding of what makes a design truly exceptional. My approach is rooted in the belief that fashion should be both beautiful and responsible.</p>
+    </div>
+
+    <div id="services-window" class="content-window">
+        <button class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2>PROJECTS</h2>
+        <p>Here are some of my recent projects that showcase my creative vision and dedication to sustainable luxury fashion:</p>
+        <div class="project-list">
+            <div class="project-item">
+                <h3>ETHEREAL COLLECTION</h3>
+                <p>A sustainable luxury collection inspired by natural phenomena, featuring organic materials and innovative dyeing techniques.</p>
+            </div>
+            <div class="project-item">
+                <h3>METAMORPHOSIS</h3>
+                <p>An experimental collection exploring transformation in fashion through adaptable and convertible pieces.</p>
+            </div>
+            <div class="project-item">
+                <h3>DIGITAL FASHION</h3>
+                <p>A groundbreaking virtual couture collection pushing the boundaries of digital design and sustainability.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="contact-window" class="content-window">
+        <button class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2>CONTACT</h2>
+        <p>I'm always interested in collaborating on innovative and sustainable fashion projects. Let's create something beautiful together.</p>
+        <div class="contact-info">
+            <p><i class="fas fa-envelope"></i> amandamichelena@gmail.com</p>
+            <p><i class="fab fa-instagram"></i> @amandamichelena</p>
+        </div>
+    </div>
+
+    <script src="js/background.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/projects.js"></script>
+</body>
+</html>
