@@ -102,15 +102,35 @@ class BackgroundAnimation {
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
         window.addEventListener('touchmove', (e) => {
             if (this.scrollProgress < 0) return; // Don't interact before scroll
+            
+            // Only prevent default if touching the canvas
             const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const isCanvas = element && element.tagName === 'CANVAS';
+            
+            if (isCanvas) {
+                e.preventDefault(); // Only prevent scrolling when interacting with canvas
+            }
+            
+            // Apply smoothing for touch events
+            const smoothingFactor = 0.5; // Lower = smoother but less responsive
+            const smoothedX = touch.clientX;
+            const smoothedY = touch.clientY;
+            
             this.onMouseMove({
-                clientX: touch.clientX,
-                clientY: touch.clientY
+                clientX: smoothedX,
+                clientY: smoothedY
             });
-        });
+        }, { passive: false });
+        
         window.addEventListener('touchstart', (e) => {
             if (this.scrollProgress < 0) return; // Don't interact before scroll
             const touch = e.touches[0];
+            
+            // Reset previous mouse position to avoid jumps
+            this.prevMouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+            this.prevMouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+            
             this.onMouseMove({
                 clientX: touch.clientX,
                 clientY: touch.clientY
@@ -174,6 +194,12 @@ class BackgroundAnimation {
         // Calculate velocity (push points away from the mouse if wanted)
         this.mouseVelocity.x = this.mouse.x - this.prevMouse.x;
         this.mouseVelocity.y = this.mouse.y - this.prevMouse.y;
+        
+        // Detect if this is likely a touch event (smaller movements)
+        const isTouchEvent = 'ontouchstart' in window && Math.abs(this.mouseVelocity.x) + Math.abs(this.mouseVelocity.y) < 0.1;
+        
+        // Apply stronger smoothing for touch events
+        const smoothingFactor = isTouchEvent ? 0.05 : 0.1;
 
         this.prevMouse.x = this.mouse.x;
         this.prevMouse.y = this.mouse.y;
@@ -189,8 +215,8 @@ class BackgroundAnimation {
         this.targetRotation.x = this.baseRotation.x + tiltX;
         this.targetRotation.y = this.baseRotation.y + tiltY;
 
-        // Interpolate rotation
-        const interpolationSpeed = 0.1 * (1 - (this.disperseProgress / 0.87) * 0.9);
+        // Interpolate rotation - use different smoothing for touch vs mouse
+        const interpolationSpeed = smoothingFactor * (1 - (this.disperseProgress / 0.87) * 0.9);
         this.modelRotation.x += (this.targetRotation.x - this.modelRotation.x) * interpolationSpeed;
         this.modelRotation.y += (this.targetRotation.y - this.modelRotation.y) * interpolationSpeed;
 
