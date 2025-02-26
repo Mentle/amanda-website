@@ -157,6 +157,9 @@ class BackgroundAnimation {
                 this.closeWindow(window.id);
             });
         });
+
+        // Add this at the end of the constructor
+        this.windowScrollHandler = this.preventBackgroundScroll.bind(this);
     }
 
     // --------------------------------------------------
@@ -1079,6 +1082,14 @@ class BackgroundAnimation {
         });
     }
 
+    preventBackgroundScroll(e) {
+        if (document.body.classList.contains('window-open')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }
+
     // Add method for handling text clicks
     onCanvasClick(event) {
         // Only allow clicking when text is fully formed and not already animating
@@ -1153,20 +1164,49 @@ class BackgroundAnimation {
     showWindow(windowId) {
         const window = document.getElementById(windowId);
         window.style.display = 'block';
+        
+        // Set scroll position CSS variable
+        document.documentElement.style.setProperty('--scroll-top', `${window.scrollY}px`);
+        
         // Trigger reflow
         window.offsetHeight;
         window.classList.add('visible');
+        document.body.classList.add('window-open');
+        
+        // Add global scroll prevention
+        document.addEventListener('wheel', this.windowScrollHandler, { passive: false });
+        document.addEventListener('touchmove', this.windowScrollHandler, { passive: false });
+        document.addEventListener('scroll', this.windowScrollHandler, { passive: false });
     }
 
     closeWindow(windowId) {
         const window = document.getElementById(windowId);
         window.classList.remove('visible');
+        document.body.classList.remove('window-open');
+        
+        // Remove scroll event listeners
+        if (window._preventScrollHandler) {
+            window.removeEventListener('wheel', window._preventScrollHandler);
+            window.removeEventListener('touchmove', window._preventScrollHandler);
+            delete window._preventScrollHandler;
+        }
+        
+        // Remove global scroll prevention
+        document.removeEventListener('wheel', this.windowScrollHandler);
+        document.removeEventListener('touchmove', this.windowScrollHandler);
+        document.removeEventListener('scroll', this.windowScrollHandler);
+        
         // Start scatter-in animation
         this.textScatterActive = true;
         this.textScatterDirection = 'in';
+        
         // Wait for fade out before hiding
         setTimeout(() => {
             window.style.display = 'none';
+            // Set scroll to bottom without animation
+            document.documentElement.style.scrollBehavior = 'auto';
+            document.documentElement.scrollTop = document.documentElement.scrollHeight;
+            document.documentElement.style.scrollBehavior = '';
         }, 500); // Match the CSS transition duration
     }
 }
