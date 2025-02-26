@@ -100,31 +100,22 @@ class BackgroundAnimation {
 
         // Basic event listeners (model rotation, scroll, resize)
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
-        
-        // Handle touch events for particle interaction
-        let touchStartY;
-        window.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            const touch = e.touches[0];
-            this.onMouseMove({
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-        });
-        
         window.addEventListener('touchmove', (e) => {
+            if (this.scrollProgress < 0) return; // Don't interact before scroll
             const touch = e.touches[0];
-            const touchDeltaY = touch.clientY - touchStartY;
-            
-            // If it's more of a vertical movement, let the browser handle scrolling
-            if (Math.abs(touchDeltaY) > 10) return;
-            
             this.onMouseMove({
                 clientX: touch.clientX,
                 clientY: touch.clientY
             });
         });
-        
+        window.addEventListener('touchstart', (e) => {
+            if (this.scrollProgress < 0) return; // Don't interact before scroll
+            const touch = e.touches[0];
+            this.onMouseMove({
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+        });
         window.addEventListener('resize', this.onWindowResize.bind(this));
         window.addEventListener('scroll', this.handleScroll.bind(this));
 
