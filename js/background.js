@@ -103,14 +103,7 @@ class BackgroundAnimation {
         window.addEventListener('touchmove', (e) => {
             if (this.scrollProgress < 0) return; // Don't interact before scroll
             
-            // Only prevent default if touching the canvas
             const touch = e.touches[0];
-            const element = document.elementFromPoint(touch.clientX, touch.clientY);
-            const isCanvas = element && element.tagName === 'CANVAS';
-            
-            if (isCanvas) {
-                e.preventDefault(); // Only prevent scrolling when interacting with canvas
-            }
             
             // Apply smoothing for touch events
             const smoothingFactor = 0.5; // Lower = smoother but less responsive
@@ -121,7 +114,7 @@ class BackgroundAnimation {
                 clientX: smoothedX,
                 clientY: smoothedY
             });
-        }, { passive: false });
+        });
         
         window.addEventListener('touchstart', (e) => {
             if (this.scrollProgress < 0) return; // Don't interact before scroll
