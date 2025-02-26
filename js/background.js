@@ -744,11 +744,27 @@ class BackgroundAnimation {
         const config = {
             canvasWidth: 1024,
             canvasHeight: 256,
-            fontSize: 180,  
-            worldScale: 0.015,  
-            verticalSpacing: 3,  
-            zPosition: 5  
+            fontSize: 180
         };
+
+        // Adjust scale based on screen width
+        let worldScale;
+        const width = window.innerWidth;
+        if (width <= 360) {
+            worldScale = 0.023;  // Much bigger for very small screens
+        } else if (width <= 500) {
+            worldScale = 0.023;  // Bigger for small mobile
+        } else if (width <= 768) {
+            worldScale = 0.02;   // Big for mobile
+        } else if (width <= 1024) {
+            worldScale = 0.018;  // Medium for tablets
+        } else {
+            worldScale = 0.015;  // Original size for desktop
+        }
+
+        config.worldScale = worldScale;
+        config.verticalSpacing = 5;
+        config.zPosition = 5;
         
         geometries.forEach((geometry, groupIndex) => {
             const canvas = document.createElement('canvas');
@@ -849,7 +865,17 @@ class BackgroundAnimation {
         let zoomZ = -4.7;
 
         // Responsive tweaks (modify as needed)
-        if (width <= 768) {
+        if (width <= 360) {
+            y = -180; // further away
+            z = 5;
+            zoomY = 40;
+            zoomZ = -6;
+        } else if (width <= 500) {
+            y = -160; // further away
+            z = 5;
+            zoomY = 40;
+            zoomZ = -6;
+        } else if (width <= 768) {
             y = -120; // further away
             z = 5;
             zoomY = 40;
