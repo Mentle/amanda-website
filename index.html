@@ -127,30 +127,94 @@
         <button class="back-btn">
             <i class="fas fa-arrow-left"></i>
         </button>
-        <h2>ABOUT</h2>
-        <img src="images/profile.jpg" alt="Amanda's Profile" class="about-image">
-        <p>I am a fashion designer and creative director with a deep passion for avant-garde design and sustainable fashion. My work combines traditional craftsmanship with innovative techniques, resulting in unique pieces that tell a story of elegance and consciousness.</p>
-        <p>With years of experience in the luxury fashion industry, I've developed a keen eye for detail and a strong understanding of what makes a design truly exceptional. My approach is rooted in the belief that fashion should be both beautiful and responsible.</p>
+        <div class="window-container">
+            <div class="window-header">
+                <h2>ABOUT</h2>
+            </div>
+            <div class="window-content">
+                <div class="about-grid">
+                    <div class="about-image-container">
+                        <img src="images/profile.jpg" alt="Amanda's Profile" class="about-image">
+                        <div class="about-social">
+                            <a href="mailto:amandamichelena@gmail.com" class="social-link">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                            <a href="https://instagram.com/amandamichelena" target="_blank" rel="noopener noreferrer" class="social-link instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="about-text">
+                        <h3>Creative Producer for Fashion & Luxury</h3>
+                        <p>I am a fashion designer and creative director with a deep passion for avant-garde design and sustainable fashion. My work combines traditional craftsmanship with innovative techniques, resulting in unique pieces that tell a story of elegance and consciousness.</p>
+                        <p>With years of experience in the luxury fashion industry, I've developed a keen eye for detail and a strong understanding of what makes a design truly exceptional. My approach is rooted in the belief that fashion should be both beautiful and responsible.</p>
+                        <div class="about-highlights">
+                            <div class="highlight-item">
+                                <i class="fas fa-star"></i>
+                                <h4>Vision</h4>
+                                <p>Creating sustainable luxury that respects our environment while pushing creative boundaries.</p>
+                            </div>
+                            <div class="highlight-item">
+                                <i class="fas fa-palette"></i>
+                                <h4>Expertise</h4>
+                                <p>Combining traditional craftsmanship with innovative techniques for unique designs.</p>
+                            </div>
+                            <div class="highlight-item">
+                                <i class="fas fa-heart"></i>
+                                <h4>Passion</h4>
+                                <p>Dedicated to fashion, food, and flowers - my biggest obsessions and sources of inspiration.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="services-window" class="content-window">
         <button class="back-btn">
             <i class="fas fa-arrow-left"></i>
         </button>
-        <h2>PROJECTS</h2>
-        <p>Here are some of my recent projects that showcase my creative vision and dedication to sustainable luxury fashion:</p>
-        <div class="project-list">
-            <div class="project-item">
-                <h3>ETHEREAL COLLECTION</h3>
-                <p>A sustainable luxury collection inspired by natural phenomena, featuring organic materials and innovative dyeing techniques.</p>
+        <div class="window-container">
+            <div class="window-header">
+                <h2>PROJECTS</h2>
             </div>
-            <div class="project-item">
-                <h3>METAMORPHOSIS</h3>
-                <p>An experimental collection exploring transformation in fashion through adaptable and convertible pieces.</p>
-            </div>
-            <div class="project-item">
-                <h3>DIGITAL FASHION</h3>
-                <p>A groundbreaking virtual couture collection pushing the boundaries of digital design and sustainability.</p>
+            <div class="window-content">
+                <div class="projects-intro">
+                    <p>Here are some of my recent projects that showcase my creative vision and dedication to sustainable luxury fashion:</p>
+                </div>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <div class="project-image">
+                            <img src="images/project1.jpg" alt="Ethereal Collection" class="project-img">
+                        </div>
+                        <div class="project-info">
+                            <h3>ETHEREAL COLLECTION</h3>
+                            <p>A sustainable luxury collection inspired by natural phenomena, featuring organic materials and innovative dyeing techniques.</p>
+                            <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-image">
+                            <img src="images/project2.jpg" alt="Metamorphosis" class="project-img">
+                        </div>
+                        <div class="project-info">
+                            <h3>METAMORPHOSIS</h3>
+                            <p>An experimental collection exploring transformation in fashion through adaptable and convertible pieces.</p>
+                            <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="project-card">
+                        <div class="project-image">
+                            <img src="images/project3.jpg" alt="Digital Fashion" class="project-img">
+                        </div>
+                        <div class="project-info">
+                            <h3>DIGITAL FASHION</h3>
+                            <p>A groundbreaking virtual couture collection pushing the boundaries of digital design and sustainability.</p>
+                            <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -159,11 +223,58 @@
         <button class="back-btn">
             <i class="fas fa-arrow-left"></i>
         </button>
-        <h2>CONTACT</h2>
-        <p>I'm always interested in collaborating on innovative and sustainable fashion projects. Let's create something beautiful together.</p>
-        <div class="contact-info">
-            <p><i class="fas fa-envelope"></i> amandamichelena@gmail.com</p>
-            <p><i class="fab fa-instagram"></i> @amandamichelena</p>
+        <div class="window-container">
+            <div class="window-header">
+                <h2>CONTACT</h2>
+            </div>
+            <div class="window-content">
+                <div class="contact-grid">
+                    <div class="contact-form-container">
+                        <h3>Get in Touch</h3>
+                        <p>I'm always interested in collaborating on innovative and sustainable fashion projects. Let's create something beautiful together.</p>
+                        <form class="contact-form">
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" id="name" name="name" placeholder="Your Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" placeholder="Your Email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Message</label>
+                                <textarea id="message" name="message" placeholder="Your Message" required></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn">Send Message</button>
+                        </form>
+                    </div>
+                    <div class="contact-info-container">
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <div>
+                                    <h4>Email</h4>
+                                    <p><a href="mailto:amandamichelena@gmail.com">amandamichelena@gmail.com</a></p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fab fa-instagram"></i>
+                                <div>
+                                    <h4>Instagram</h4>
+                                    <p><a href="https://instagram.com/amandamichelena" target="_blank">@amandamichelena</a></p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <div>
+                                    <h4>Location</h4>
+                                    <p>Paris, France</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
