@@ -18,7 +18,7 @@
     --scrollbar-thumb: rgba(0, 0, 0, 0.2);
     --gradient-top: #ffffff;
     --gradient-middle: #f5f5f5;
-    --gradient-bottom: #e0e0e0;
+    --gradient-bottom: #b8b6b6;
 }
 
 [data-theme="dark"] {
@@ -34,7 +34,7 @@
     --scrollbar-thumb: rgba(255, 255, 255, 0.2);
     --gradient-top: #0a0a0a;
     --gradient-middle: #1a1a1a;
-    --gradient-bottom: #2a2a2a;
+    --gradient-bottom: #373636;
 }
 
 * {
@@ -62,8 +62,8 @@
 body {
     font-family: 'Montserrat', sans-serif;
     color: var(--text-color);
-    background: radial-gradient(
-        ellipse at top right, 
+    background: linear-gradient(
+        to bottom, 
         var(--gradient-top) 0%, 
         var(--gradient-middle) 60%, 
         var(--gradient-bottom) 100%

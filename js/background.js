@@ -461,10 +461,21 @@ class BackgroundAnimation {
                 const targetX = this.finalTextPositions[i];
                 const targetY = this.finalTextPositions[i + 1];
                 const targetZ = this.finalTextPositions[i + 2];
-
-                positions[i]   = dispersedX + (targetX - dispersedX) * t;
-                positions[i+1] = dispersedY + (targetY - dispersedY) * t;
-                positions[i+2] = dispersedZ + (targetZ - dispersedZ) * t;
+                
+                // Check if this is an off-screen point (points that were positioned far away)
+                const isOffscreenPoint = Math.abs(targetX) > 500 || Math.abs(targetY) > 500 || targetZ < -500;
+                
+                if (isOffscreenPoint) {
+                    // Keep offscreen points far away
+                    positions[i] = targetX;
+                    positions[i+1] = targetY;
+                    positions[i+2] = targetZ;
+                } else {
+                    // Normal interpolation for visible points
+                    positions[i]   = dispersedX + (targetX - dispersedX) * t;
+                    positions[i+1] = dispersedY + (targetY - dispersedY) * t;
+                    positions[i+2] = dispersedZ + (targetZ - dispersedZ) * t;
+                }
             }
         }
 
@@ -849,6 +860,15 @@ class BackgroundAnimation {
                 attempts++;
             }
         });
+        
+        // Position any unused points far off-screen
+        while (currentIndex < totalCount) {
+            points[currentIndex * 3] = 1000 + Math.random() * 1000; // Far off to the right
+            points[currentIndex * 3 + 1] = 1000 + Math.random() * 1000; // Far off to the top
+            points[currentIndex * 3 + 2] = -1000; // Far behind
+            groups[currentIndex] = -1; // Mark as not belonging to any group
+            currentIndex++;
+        }
         
         return { points, groups };
     }
