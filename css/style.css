@@ -819,8 +819,10 @@ textarea {
     position: fixed;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     display: none;
-    z-index: 1000;
+    z-index: 1500; /* Increased z-index to ensure it's above hero content */
     opacity: 0;
     transition: opacity 0.3s ease;
     overflow-y: auto;
@@ -861,6 +863,9 @@ textarea {
     padding: 0 1rem;
     box-sizing: border-box;
     overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
 }
 
 .content-window.visible {
@@ -876,6 +881,17 @@ textarea {
     opacity: 1;
     transform: translateY(0);
     overflow-y: auto !important;
+}
+
+.window-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    height: auto;
+    min-height: calc(100% - 8rem);
 }
 
 /* Only prevent scrolling on the main document */
@@ -2020,6 +2036,26 @@ html {
 }
 
 [data-theme="light"] .particle {
-    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 80%);
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 80%);
     filter: blur(3px);
+    opacity: 0.5; /* Increased opacity for light mode */
+}
+
+/* Hide hero content when window is open */
+html.window-open .hero-content,
+body.window-open .hero-content {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+html.window-open .intro-text,
+body.window-open .intro-text,
+html.window-open .social-links,
+body.window-open .social-links,
+html.window-open .scroll-indicator,
+body.window-open .scroll-indicator {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }

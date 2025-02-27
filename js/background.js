@@ -1105,13 +1105,19 @@ class BackgroundAnimation {
         if (document.body.classList.contains('window-open')) {
             // Check if the event originated from a content window
             const path = e.composedPath ? e.composedPath() : e.path;
-            const isFromWindow = path.some(el => el.classList && el.classList.contains('content-window'));
+            const isFromWindow = path.some(el => el.classList && 
+                (el.classList.contains('content-window') || 
+                 el.classList.contains('window-content') || 
+                 el.classList.contains('window-container')));
             
+            // Only prevent default if the event is NOT from a content window
             if (!isFromWindow) {
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }
+            // Allow scrolling if event originated from content window
+            return true;
         }
     }
 
@@ -1139,7 +1145,13 @@ class BackgroundAnimation {
         // Add global scroll prevention only for background
         document.addEventListener('wheel', this.windowScrollHandler, { passive: false });
         document.addEventListener('touchmove', this.windowScrollHandler, { passive: false });
-        document.addEventListener('scroll', this.windowScrollHandler, { passive: false });
+        
+        // Make sure content windows are scrollable
+        const contentWindows = document.querySelectorAll('.content-window, .window-content, .window-container');
+        contentWindows.forEach(el => {
+            el.style.overflowY = 'auto';
+            el.style.webkitOverflowScrolling = 'touch';
+        });
     }
 
     // Add method for handling text clicks
@@ -1227,7 +1239,6 @@ class BackgroundAnimation {
         // Remove global scroll prevention
         document.removeEventListener('wheel', this.windowScrollHandler);
         document.removeEventListener('touchmove', this.windowScrollHandler);
-        document.removeEventListener('scroll', this.windowScrollHandler);
         
         // Start scatter-in animation
         this.textScatterActive = true;

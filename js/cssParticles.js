@@ -8,8 +8,8 @@ class CSSParticles {
         this.particleCount = 20; // Fewer particles for better performance
         this.minSize = 8;  // Larger minimum size
         this.maxSize = 25; // Larger maximum size
-        this.minOpacity = 0.1;
-        this.maxOpacity = 0.3;
+        this.minOpacity = 0.2; // Increased minimum opacity
+        this.maxOpacity = 0.4; // Increased maximum opacity
         
         // Movement configuration
         this.minDuration = 80; // Even slower movement (seconds)
