@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,8 +16,12 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
     <script src="js/PLYLoader.js"></script>
     <script src="js/dat.gui.min.js"></script>
+    <script src="js/cssParticles.js"></script>
 </head>
 <body>
+    <!-- Vignette effect container -->
+    <div class="vignette-container"></div>
+    
     <canvas id="background-canvas"></canvas>
             <!-- Theme toggle button -->
         <button class="theme-toggle" aria-label="Toggle theme">
