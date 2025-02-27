@@ -810,8 +810,7 @@ class BackgroundAnimation {
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'white';
-            //Change font particle font
-            ctx.font = `bold ${config.fontSize}px 'Italiana', serif`;  
+            ctx.font = `bold ${config.fontSize}px Arial`;  
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
