@@ -847,6 +847,16 @@ textarea {
     display: block;
 }
 
+.window-content {
+    padding: 90px 20px 20px;
+    overflow-y: auto;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1800;
+}
+
 /* Ensure the navigation is fully hidden when a window is open */
 body.window-open .navigation,
 html.window-open .navigation {
@@ -1360,6 +1370,19 @@ html {
     align-items: center;
     height: 60px;
     background: transparent; /* Ensure transparent background */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.window-header.fade-out {
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+}
+
+.window-header.fade-out.hover-visible {
+    opacity: 0.9;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .window-header h2 {

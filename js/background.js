@@ -1216,53 +1216,36 @@ class BackgroundAnimation {
             el.style.overflowY = 'auto';
             el.style.webkitOverflowScrolling = 'touch';
         });
-    }
-
-    // Add method for handling text clicks
-    onCanvasClick(event) {
-        // Only allow clicking when text is fully formed and not already animating
-        if (!this.model || this.disperseProgress < 0.87 || this.reassembleProgress < 1 || this.textScatterActive) return;
-
-        // Calculate mouse position in normalized device coordinates (-1 to +1)
-        const rect = this.renderer.domElement.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
-
-        // Check for intersections with the point cloud
-        const intersects = this.raycaster.intersectObject(this.model);
-
-        if (intersects.length > 0) {
-            // Get the index of the clicked point
-            const pointIndex = intersects[0].index;
-            
-            // Determine which group (word) was clicked
-            const groupIndex = this.pointGroups[pointIndex];
-            
-            // Initialize scatter vectors if not already done
-            if (!this.textScatterVectors) {
-                this.initTextScatterVectors();
+        
+        // Initialize header fade effect for this window
+        const headerFadeHandler = function() {
+            const header = this.querySelector('.window-header');
+            if (header) {
+                if (this.scrollTop > 50) {
+                    header.classList.add('fade-out');
+                } else {
+                    header.classList.remove('fade-out');
+                }
             }
-            
-            // Start scatter animation and set the window to open
-            this.textScatterActive = true;
-            this.textScatterDirection = 'out';
-            this.textScatterProgress = 0;
-            
-            // Store the window ID to open after animation
-            switch(groupIndex) {
-                case 0:
-                    this.activeWindowId = 'about-window';
-                    break;
-                case 1:
-                    this.activeWindowId = 'services-window';
-                    break;
-                case 2:
-                    this.activeWindowId = 'contact-window';
-                    break;
+        };
+        
+        window.addEventListener('scroll', headerFadeHandler);
+        
+        // Add mouse position detection for header visibility
+        window.addEventListener('mousemove', function(e) {
+            const header = this.querySelector('.window-header');
+            if (header && header.classList.contains('fade-out')) {
+                // If mouse is near the top of the window, show the header
+                if (e.clientY < 100) {
+                    header.classList.add('hover-visible');
+                } else {
+                    header.classList.remove('hover-visible');
+                }
             }
-        }
+        });
+        
+        // Trigger initial check
+        window.dispatchEvent(new Event('scroll'));
     }
 
     // Add method to initialize close buttons
@@ -1316,6 +1299,53 @@ class BackgroundAnimation {
             document.documentElement.scrollTop = document.documentElement.scrollHeight;
             document.documentElement.style.scrollBehavior = '';
         }, 500); // Match the CSS transition duration
+    }
+
+    // Add method for handling text clicks
+    onCanvasClick(event) {
+        // Only allow clicking when text is fully formed and not already animating
+        if (!this.model || this.disperseProgress < 0.87 || this.reassembleProgress < 1 || this.textScatterActive) return;
+
+        // Calculate mouse position in normalized device coordinates (-1 to +1)
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
+
+        // Check for intersections with the point cloud
+        const intersects = this.raycaster.intersectObject(this.model);
+
+        if (intersects.length > 0) {
+            // Get the index of the clicked point
+            const pointIndex = intersects[0].index;
+            
+            // Determine which group (word) was clicked
+            const groupIndex = this.pointGroups[pointIndex];
+            
+            // Initialize scatter vectors if not already done
+            if (!this.textScatterVectors) {
+                this.initTextScatterVectors();
+            }
+            
+            // Start scatter animation and set the window to open
+            this.textScatterActive = true;
+            this.textScatterDirection = 'out';
+            this.textScatterProgress = 0;
+            
+            // Store the window ID to open after animation
+            switch(groupIndex) {
+                case 0:
+                    this.activeWindowId = 'about-window';
+                    break;
+                case 1:
+                    this.activeWindowId = 'services-window';
+                    break;
+                case 2:
+                    this.activeWindowId = 'contact-window';
+                    break;
+            }
+        }
     }
 }
 

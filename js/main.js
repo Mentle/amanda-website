@@ -306,18 +306,20 @@ document.addEventListener('DOMContentLoaded', () => {
         themeToggle.addEventListener('click', toggleTheme);
     }
 
-    // Remove scroll handler for navigation
-    // function handleScroll() {
-    //     const nav = document.querySelector('.navigation');
-    //     if (window.scrollY > 50) {
-    //         nav.classList.add('scrolled');
-    //     } else {
-    //         nav.classList.remove('scrolled');
-    //     }
-    // }
-
-    // window.addEventListener('scroll', handleScroll);
-    // handleScroll(); // Call once on page load
+    // Add scroll event listeners to content windows for header fade effect
+    const contentWindows = document.querySelectorAll('.content-window');
+    contentWindows.forEach(window => {
+        window.addEventListener('scroll', function() {
+            const header = this.querySelector('.window-header');
+            if (header) {
+                if (this.scrollTop > 50) {
+                    header.classList.add('fade-out');
+                } else {
+                    header.classList.remove('fade-out');
+                }
+            }
+        });
+    });
 
     function loadProjects() {
         const projectsGrid = document.querySelector('.project-grid');
