@@ -12,8 +12,8 @@ class CSSParticles {
         this.maxOpacity = 0.4; // Increased maximum opacity
         
         // Movement configuration
-        this.minDuration = 80; // Even slower movement (seconds)
-        this.maxDuration = 150; // Even slower for some particles
+        this.minDuration = 10; // Faster movement (seconds)
+        this.maxDuration = 20; // Faster movement
         this.container = null;
         this.particles = [];
         this.isInitialized = false;
@@ -97,17 +97,17 @@ class CSSParticles {
             duration,
             startTime: Date.now(),
             // Horizontal movement
-            xAmplitude: 1 + Math.random() * 3, // Reduced movement range
-            xFrequency: 0.05 + Math.random() * 0.1, // Slower oscillation
+            xAmplitude: 1 + Math.random() * 4, // Increased movement range
+            xFrequency: 0.1 + Math.random() * 0.2, // Faster oscillation
             // Vertical movement
-            yAmplitude: 1 + Math.random() * 3, // Reduced movement range
-            yFrequency: 0.03 + Math.random() * 0.08, // Slower oscillation
+            yAmplitude: 1 + Math.random() * 4, // Increased movement range
+            yFrequency: 0.08 + Math.random() * 0.15, // Faster oscillation
             // Phase offsets for organic movement
             xPhase: Math.random() * Math.PI * 2,
             yPhase: Math.random() * Math.PI * 2,
             // Secondary movement for more complexity
-            secondaryAmplitude: 0.3 + Math.random() * 0.8, // Reduced secondary movement
-            secondaryFrequency: 0.1 + Math.random() * 0.2, // Slower secondary movement
+            secondaryAmplitude: 0.5 + Math.random() * 1.2, // Increased secondary movement
+            secondaryFrequency: 0.2 + Math.random() * 0.3, // Faster secondary movement
             secondaryPhase: Math.random() * Math.PI * 2
         };
         
@@ -133,8 +133,8 @@ class CSSParticles {
             const secondaryX = Math.sin(elapsed * particleData.secondaryFrequency + particleData.secondaryPhase) * particleData.secondaryAmplitude;
             const secondaryY = Math.cos(elapsed * particleData.secondaryFrequency * 1.3 + particleData.secondaryPhase) * particleData.secondaryAmplitude;
             
-            // Very slow drift upward (barely noticeable)
-            const slowDrift = (Math.sin(elapsed * 0.02) * 3) - 0.5; // Slight upward bias
+            // Very slow drift upward (more noticeable)
+            const slowDrift = (Math.sin(elapsed * 0.05) * 5) - 1; // Increased drift speed and range
             
             // Update position with combined movements
             const newX = particleData.centerX + xOffset + secondaryX;
