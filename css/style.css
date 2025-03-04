@@ -145,6 +145,11 @@ body.scrolled #background-canvas {
     color: var(--text-color);
     transition: color 0.3s ease;
     letter-spacing: 2px;
+    cursor: pointer;
+}
+
+.logo:hover {
+    opacity: 0.8;
 }
 
 /* Navigation Dots */
@@ -944,6 +949,8 @@ body.window-open {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    z-index: 2000; /* Increased z-index to be above content window (1500) */
+    pointer-events: auto; /* Ensure it's always clickable */
 }
 
 .back-btn:hover {

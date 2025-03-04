@@ -30,7 +30,7 @@
             
     <nav class="navigation">
         <div class="nav-content">
-            <div class="logo">AMANDA MICHELENA</div>
+            <div class="logo" id="logo" onclick="scrollToTop()">AMANDA MICHELENA</div>
         </div>
     </nav>
 
@@ -281,6 +281,12 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
 
     <script src="js/background.js"></script>
     <script src="js/main.js"></script>

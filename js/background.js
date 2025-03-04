@@ -23,6 +23,7 @@ class BackgroundAnimation {
         this.mouse = new THREE.Vector2(0, 0);
         this.prevMouse = new THREE.Vector2(0, 0);
         this.mouseVelocity = new THREE.Vector2(0, 0);
+        this.disableMouseInteraction = false; // Flag to disable mouse interaction
 
         // Main 3D model references
         this.model = null;
@@ -124,11 +125,29 @@ class BackgroundAnimation {
             this.prevMouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
             this.prevMouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
             
+            // Enable mouse interaction
+            this.disableMouseInteraction = false;
+            
             this.onMouseMove({
                 clientX: touch.clientX,
                 clientY: touch.clientY
             });
         });
+
+        // Add touchend event to completely disable the circle effect
+        window.addEventListener('touchend', () => {
+            // Disable mouse interaction completely
+            this.disableMouseInteraction = true;
+            
+            // Reset velocities
+            this.mouseVelocity.x = 0;
+            this.mouseVelocity.y = 0;
+            
+            // Reset target rotation to base rotation
+            this.targetRotation.x = this.baseRotation.x;
+            this.targetRotation.y = this.baseRotation.y;
+        });
+        
         window.addEventListener('resize', this.onWindowResize.bind(this));
         window.addEventListener('scroll', this.handleScroll.bind(this));
 
@@ -403,9 +422,9 @@ class BackgroundAnimation {
             const dy = screenY - this.mouse.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Gentle push radius
+            // Gentle push radius - only if mouse interaction is enabled
             const radius = 0.4;
-            if (distance < radius) {
+            if (!this.disableMouseInteraction && distance < radius) {
                 const t = distance / radius;
                 const smoothForce = 1 - (t * t * (3 - 2 * t));
                 const force = smoothForce * 0.1;
