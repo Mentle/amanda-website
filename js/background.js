@@ -23,7 +23,10 @@ class BackgroundAnimation {
         this.mouse = new THREE.Vector2(0, 0);
         this.prevMouse = new THREE.Vector2(0, 0);
         this.mouseVelocity = new THREE.Vector2(0, 0);
-        this.disableMouseInteraction = false; // Flag to disable mouse interaction
+        
+        // Check if on mobile device and disable interaction by default on mobile
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.disableMouseInteraction = this.isMobile; // Disabled by default on mobile
 
         // Main 3D model references
         this.model = null;
@@ -257,32 +260,32 @@ class BackgroundAnimation {
             this.renderer.domElement.style.pointerEvents = 'auto';
         }
 
-        // Text fade out (0-40% scroll)
-        const textProgress = Math.min(scrollProgress / 0.4, 1);
+        // Text fade out (0-20% scroll)
+        const textProgress = Math.min(scrollProgress / 0.2, 1);
         const heroContent = document.querySelector('.hero-content');
         if (heroContent) {
             heroContent.style.opacity = Math.max(0, 1 - textProgress * 1.2);
         }
 
-        // Zoom progress (40-70% => up to 0.3 max)
+        // Zoom progress (20-45% => up to 0.3 max)
         let zoomProgress = 0;
         const maxZoom = 0.3;
-        if (scrollProgress > 0.4) {
-            zoomProgress = Math.min((scrollProgress - 0.4) / 0.3, 1) * maxZoom;
+        if (scrollProgress > 0.2) {
+            zoomProgress = Math.min((scrollProgress - 0.2) / 0.25, 1) * maxZoom;
         }
 
-        // Dissolve progress (70-100% => up to 0.87)
+        // Dissolve progress (45-70% => up to 0.87)
         let dissolveProgress = 0;
-        if (scrollProgress > 0.7) {
-            dissolveProgress = Math.min((scrollProgress - 0.7) / 0.3, 1) * 0.87;
+        if (scrollProgress > 0.45) {
+            dissolveProgress = Math.min((scrollProgress - 0.45) / 0.25, 1) * 0.87;
         }
         this.disperseProgress = dissolveProgress;
 
-        // Text morphing progress (100-200%)
-        if (scrollProgress > 1.0) {
-            // from 1.0 to 2.0 => reassembleProgress: 0..1
-            const reassembleRange = 1.0; // 2.0 - 1.0
-            this.reassembleProgress = Math.min((scrollProgress - 1.0) / reassembleRange, 1);
+        // Text morphing progress (70-100%)
+        if (scrollProgress > 0.7) {
+            // from 0.7 to 1.0 => reassembleProgress: 0..1
+            const reassembleRange = 0.3; // 1.0 - 0.7
+            this.reassembleProgress = Math.min((scrollProgress - 0.7) / reassembleRange, 1);
         } else {
             this.reassembleProgress = 0;
         }
@@ -699,12 +702,17 @@ class BackgroundAnimation {
 
                 // Load text positions after model is loaded
                 this.loadTextPositions();
+                
+                // Signal that loading is complete
+                this.onModelLoaded();
             },
             (xhr) => {
                 console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
             },
             (error) => {
-                console.error('Error loading PLY:', error);
+                console.error('Error loading PLY model:', error);
+                // Even if there's an error, remove the loading screen
+                this.onModelLoaded();
             }
         );
     }
@@ -784,6 +792,22 @@ class BackgroundAnimation {
             null,
             (error) => console.error('Error loading font:', error)
         );
+    }
+
+    onModelLoaded() {
+        // Remove loading class from body to show content
+        document.body.classList.remove('loading');
+        
+        // Hide the loading screen
+        const loadingScreen = document.querySelector('.loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            
+            // Remove from DOM after transition completes
+            setTimeout(() => {
+                loadingScreen.remove();
+            }, 500);
+        }
     }
 
     sampleGeometryPointsWithGroups(geometries, totalCount) {

@@ -26,6 +26,19 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.overscrollBehavior = 'none';
     document.body.style.overflow = 'auto';
 
+    // Fallback for loading screen - ensure it doesn't get stuck
+    const loadingTimeout = setTimeout(() => {
+        if (document.body.classList.contains('loading')) {
+            console.warn('Loading timeout reached, forcing display of content');
+            document.body.classList.remove('loading');
+            const loadingScreen = document.querySelector('.loading-screen');
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => loadingScreen.remove(), 500);
+            }
+        }
+    }, 10000); // 10 second timeout as fallback
+
     // Load projects
     loadProjects();
 

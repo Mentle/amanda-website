@@ -281,7 +281,7 @@ section {
 }
 
 .scroll-spacer {
-    height: 300vh; /* Increased to allow more scrolling for text morphing */
+    height: 200vh; /* Reduced to match compressed scroll animation */
 }
 
 /* Main content */
@@ -290,7 +290,7 @@ main {
     z-index: 1;
     min-height: 100vh;
     background-color: var(--bg-color);
-    margin-top: 300vh; /* Match scroll-spacer height */
+    margin-top: 100vh; /* Match scroll-spacer height */
 }
 
 /* Hero Content */
@@ -2065,4 +2065,71 @@ body.window-open .scroll-indicator {
     opacity: 0 !important;
     pointer-events: none !important;
     visibility: hidden !important;
+}
+
+/* Loading Screen */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loading-logo {
+    font-family: 'Italiana', serif;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+    color: var(--text-color);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(150, 150, 150, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--accent-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Hide content until loaded */
+body.loading {
+    overflow: hidden;
+}
+
+body.loading .hero-section,
+body.loading .navigation,
+body.loading .theme-toggle,
+body.loading .vignette-container,
+body.loading #background-canvas {
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+}
+
+body:not(.loading) .hero-section,
+body:not(.loading) .navigation,
+body:not(.loading) .theme-toggle,
+body:not(.loading) .vignette-container,
+body:not(.loading) #background-canvas {
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
 }
