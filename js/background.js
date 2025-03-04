@@ -254,10 +254,19 @@ class BackgroundAnimation {
         // Add/remove scrolled class to body for global state
         if (scrollProgress > 0.1) {
             document.body.classList.add('scrolled');
-            this.renderer.domElement.style.pointerEvents = 'auto';
+            document.documentElement.classList.add('scrolled');
+            
+            // Only enable pointer events on the canvas when we're in the text navigation area
+            // This allows clicking on social links when they're visible
+            if (scrollProgress > 0.7) {
+                this.renderer.domElement.style.pointerEvents = 'auto';
+            } else {
+                this.renderer.domElement.style.pointerEvents = 'none';
+            }
         } else {
             document.body.classList.remove('scrolled');
-            this.renderer.domElement.style.pointerEvents = 'auto';
+            document.documentElement.classList.remove('scrolled');
+            this.renderer.domElement.style.pointerEvents = 'none';
         }
 
         // Text fade out (0-20% scroll)
@@ -1262,6 +1271,17 @@ class BackgroundAnimation {
                         this.textScatterDirection = 'in';
                         this.textScatterProgress = 1;
                         
+                        // Reset rotation to base rotation to ensure text is facing forward
+                        if (this.model) {
+                            this.targetRotation.copy(this.baseRotation);
+                            this.modelRotation.copy(this.baseRotation);
+                            this.model.rotation.set(
+                                this.baseRotation.x,
+                                this.baseRotation.y,
+                                this.baseRotation.z
+                            );
+                        }
+                        
                         // Hide the window immediately
                         windowElement.style.display = 'none';
                         this.activeWindowId = null;
@@ -1281,6 +1301,22 @@ class BackgroundAnimation {
         // Show point cloud
         if (this.model) {
             this.model.visible = true;
+            
+            // Reset rotation to base rotation to ensure text is facing forward
+            this.targetRotation.copy(this.baseRotation);
+            this.modelRotation.copy(this.baseRotation);
+            this.model.rotation.set(
+                this.baseRotation.x,
+                this.baseRotation.y,
+                this.baseRotation.z
+            );
+        }
+
+        // Reset pointer events based on current scroll position
+        if (this.scrollProgress > 0.7) {
+            this.renderer.domElement.style.pointerEvents = 'auto';
+        } else {
+            this.renderer.domElement.style.pointerEvents = 'none';
         }
 
         // Remove global scroll prevention

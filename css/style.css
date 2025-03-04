@@ -92,7 +92,7 @@ h1, h2, h3 {
 }
 
 body.scrolled #background-canvas {
-    pointer-events: auto;
+    /* pointer-events controlled by JavaScript based on scroll position */
 }
 
 /* Navigation styles */
@@ -1101,6 +1101,16 @@ body.window-open {
     justify-content: center;
 }
 
+/* Make theme toggle fade out when scrolled */
+body.scrolled .theme-toggle,
+html.scrolled .theme-toggle,
+body.window-open .theme-toggle,
+html.window-open .theme-toggle {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
 .theme-toggle:hover {
     opacity: 1;
     transform: scale(1.1);
@@ -1169,7 +1179,7 @@ body.window-open {
     right: 5vw;
     display: flex;
     gap: 20px;
-    z-index: 100;
+    z-index: 2100; /* Increased z-index to be higher than canvas */
     opacity: 1;
     transition: opacity 0.5s ease;
     pointer-events: auto !important;
@@ -1184,23 +1194,20 @@ body.scrolled .social-links {
     position: relative;
     color: var(--text-color);
     font-size: clamp(20px, 1.5vw, 24px);
-    text-decoration: none;
     transition: transform 0.3s ease, color 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;
     height: 40px;
+    background-color: rgba(var(--bg-color-rgb), 0.2);
     border-radius: 50%;
-    background: rgba(var(--bg-color-rgb), 0.1);
     backdrop-filter: blur(5px);
-    cursor: pointer;
-    z-index: 100;
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 2100; /* Ensure links are above canvas */
     pointer-events: auto !important;
-}
-
-body:not(.scrolled) .social-link {
-    pointer-events: auto;
+    cursor: pointer;
+    text-decoration: none;
 }
 
 .social-link:hover {
