@@ -238,7 +238,7 @@ section {
 
 .scroll-indicator {
     position: fixed;
-    bottom: 5vh;
+    bottom: 10vh;
     left: 50%;
     transform: translateX(-50%);
     color: var(--text-color);
@@ -839,6 +839,28 @@ textarea {
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     max-width: 100vw;
     box-sizing: border-box;
+    background: transparent; /* Ensure transparent background */
+}
+
+.content-window.visible {
+    opacity: 1;
+    display: block;
+}
+
+/* Ensure the navigation is fully hidden when a window is open */
+body.window-open .navigation,
+html.window-open .navigation {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    z-index: -1; /* Move it behind everything */
+}
+
+/* Ensure the logo is hidden when a window is open */
+body.window-open .logo,
+html.window-open .logo {
+    opacity: 0;
+    visibility: hidden;
 }
 
 .content-window::-webkit-scrollbar {
@@ -871,15 +893,6 @@ textarea {
     overflow-y: auto;
     height: auto;
     min-height: 100%;
-}
-
-.content-window.visible {
-    display: block;
-    opacity: 1;
-    overflow-y: auto !important;
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    -webkit-overflow-scrolling: touch;
 }
 
 .content-window.visible .window-content {
@@ -936,9 +949,10 @@ body.window-open {
 }
 
 .back-btn {
-    position: fixed;
-    top: 100px;
-    left: 2rem;
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
     background: none;
     border: none;
     color: var(--text-color);
@@ -954,7 +968,7 @@ body.window-open {
 }
 
 .back-btn:hover {
-    transform: translateX(-5px);
+    transform: translateY(-50%) translateX(-5px);
 }
 
 .back-btn i {
@@ -1141,7 +1155,7 @@ body.window-open {
 
 .social-links {
     position: fixed;
-    bottom: 5vh;
+    bottom: 10vh;
     right: 5vw;
     display: flex;
     gap: 20px;
@@ -1336,24 +1350,41 @@ html {
 .window-header {
     margin-bottom: 2rem;
     text-align: center;
+    position: fixed;
+    top: 20px;
+    left: 0;
+    right: 0;
+    z-index: 1900;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+    background: transparent; /* Ensure transparent background */
 }
 
 .window-header h2 {
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+    margin: 0;
     position: relative;
     display: inline-block;
+    font-family: 'Italiana', serif; /* Match the main logo font */
+    letter-spacing: 2px;
 }
 
 .window-header h2:after {
     content: '';
     position: absolute;
     bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
+    left: 0;
+    right: 0;
     height: 2px;
     background-color: var(--text-color);
+    width: 100%;
+}
+
+/* Add padding to window content to account for fixed header */
+.window-content {
+    padding-top: 100px;
 }
 
 /* About Window Styles */
@@ -1732,6 +1763,15 @@ html {
         box-sizing: border-box;
         overflow-x: hidden;
         text-align: center;
+        padding-top: 80px; /* Reduced padding on mobile */
+    }
+    
+    .window-header {
+        height: 50px; /* Smaller header on mobile */
+    }
+    
+    .window-header h2 {
+        font-size: 1.8rem; /* Smaller font on mobile */
     }
     
     /* Center all text in all windows on mobile */
@@ -1796,12 +1836,12 @@ html {
     }
     
     .window-header h2 {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
     
     .about-text h3,
     .contact-form-container h3 {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
     
     .submit-btn {
@@ -1878,11 +1918,11 @@ html {
     
     /* Reduce text size */
     #contact-window h2 {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
     
     #contact-window h3 {
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
 }
 
@@ -2065,6 +2105,13 @@ body.window-open .scroll-indicator {
     opacity: 0 !important;
     pointer-events: none !important;
     visibility: hidden !important;
+}
+
+/* Hide navigation when content window is open */
+body.window-open .navigation {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
 }
 
 /* Loading Screen */
