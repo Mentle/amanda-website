@@ -403,4 +403,159 @@ document.addEventListener('DOMContentLoaded', () => {
         // Removed dissolve progress update
     }
 
+    // Footer functionality
+    function initializeFooter() {
+        const footer = document.getElementById('main-footer');
+        let isFooterVisible = false;
+        
+        function checkFooterVisibility() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            
+            // Show footer when scrolled to bottom (within 100px)
+            const shouldShowFooter = scrollTop + windowHeight >= documentHeight - 100;
+            
+            if (shouldShowFooter && !isFooterVisible) {
+                footer.classList.add('visible');
+                isFooterVisible = true;
+            } else if (!shouldShowFooter && isFooterVisible) {
+                footer.classList.remove('visible');
+                isFooterVisible = false;
+            }
+        }
+        
+        // Check on scroll
+        window.addEventListener('scroll', checkFooterVisibility);
+        
+        // Initial check
+        checkFooterVisibility();
+    }
+
+    // Initialize footer
+    initializeFooter();
+
+    // Initialize navigation menu
+    initializeNavMenu();
+
+    // Navigation menu functionality
+    function initializeNavMenu() {
+        const menuButtons = document.querySelectorAll('.menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+        const menuItems = document.querySelectorAll('.nav-menu-item');
+        let isMenuOpen = false;
+
+        // Toggle menu on button click
+        menuButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+        });
+
+        // Handle menu item clicks
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const action = item.getAttribute('data-action');
+                handleNavigation(action);
+                closeMenu();
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !navMenu.contains(e.target)) {
+                closeMenu();
+            }
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isMenuOpen) {
+                closeMenu();
+            }
+        });
+
+        function toggleMenu() {
+            if (isMenuOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        }
+
+        function openMenu() {
+            navMenu.classList.add('active');
+            isMenuOpen = true;
+        }
+
+        function closeMenu() {
+            navMenu.classList.remove('active');
+            isMenuOpen = false;
+        }
+
+        function handleNavigation(action) {
+            // Get the background animation instance
+            const backgroundCanvas = document.getElementById('background-canvas');
+            const backgroundInstance = window.backgroundAnimation;
+
+            switch (action) {
+                case 'home':
+                    // Close any open windows using the existing system
+                    const openWindows = document.querySelectorAll('.content-window.visible');
+                    openWindows.forEach(window => {
+                        if (backgroundInstance && backgroundInstance.closeWindow) {
+                            backgroundInstance.closeWindow(window.id);
+                        }
+                    });
+                    setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 300);
+                    break;
+                case 'about':
+                    switchToWindow('about-window');
+                    break;
+                case 'portfolio':
+                    switchToWindow('services-window');
+                    break;
+                case 'contact':
+                    switchToWindow('contact-window');
+                    break;
+            }
+        }
+
+        function switchToWindow(windowId) {
+            // Direct window switching without going through homepage
+            const targetWindow = document.getElementById(windowId);
+            const openWindows = document.querySelectorAll('.content-window.visible');
+            
+            if (targetWindow) {
+                // Ensure window-open state is maintained
+                document.body.classList.add('window-open');
+                document.documentElement.classList.add('window-open');
+                
+                // Hide current windows instantly
+                openWindows.forEach(window => {
+                    window.classList.remove('visible');
+                    window.style.display = 'none';
+                });
+                
+                // Show new window instantly
+                targetWindow.style.display = 'block';
+                targetWindow.classList.add('visible');
+                
+                // Initialize portfolio gallery if needed
+                if (windowId === 'services-window' && typeof window.initPortfolioGallery === 'function') {
+                    window.initPortfolioGallery();
+                }
+                
+                // Hide 3D model during window display
+                const backgroundInstance = window.backgroundAnimation;
+                if (backgroundInstance && backgroundInstance.model) {
+                    backgroundInstance.model.visible = false;
+                }
+            }
+        }
+    }
+
 });

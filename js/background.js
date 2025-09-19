@@ -739,7 +739,7 @@ class BackgroundAnimation {
                 // Create text geometries
                 const font = loadedGeometries[0];
                 const textGeometries = [];
-                const words = ['ABOUT', 'CLIENTS', 'CONTACT'];
+                const words = ['ABOUT', 'PORTFOLIO', 'CONTACT'];
                 const yPositions = [5, 0, -5];  // Vertical spacing between words
 
                 words.forEach((text, index) => {
@@ -750,7 +750,7 @@ class BackgroundAnimation {
                 });
 
                 const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(textGeometries);
-                mergedGeometry.translate(0, 0, 5);
+                mergedGeometry.translate(0, 0, 0);
                 
                 // Store original merged geometry for resize handling
                 this.originalTextGeometry = mergedGeometry.clone();
@@ -849,7 +849,7 @@ class BackgroundAnimation {
 
         config.worldScale = worldScale;
         config.verticalSpacing = 5;
-        config.zPosition = 5;
+        config.zPosition = 0;
         
         geometries.forEach((geometry, groupIndex) => {
             const canvas = document.createElement('canvas');
@@ -868,7 +868,7 @@ class BackgroundAnimation {
             ctx.textBaseline = 'middle';
             
             // Draw the text
-            const text = ['ABOUT', 'SERVICES', 'CONTACT'][groupIndex];
+            const text = ['ABOUT', 'PORTFOLIO', 'CONTACT'][groupIndex];
             ctx.fillText(text, canvas.width / 2, canvas.height / 2);
             
             // Get pixel data
@@ -1198,6 +1198,12 @@ class BackgroundAnimation {
         const window = document.getElementById(windowId);
         window.style.display = 'block';
         
+        // Initialize portfolio gallery if services window is opened
+        if (windowId === 'services-window' && typeof window.initPortfolioGallery === 'function') {
+            console.log('🎨 Services window opened, initializing portfolio gallery...');
+            window.initPortfolioGallery();
+        }
+        
         // Hide point cloud
         if (this.model) {
             this.model.visible = false;
@@ -1387,5 +1393,5 @@ class BackgroundAnimation {
 
 // Init once DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    new BackgroundAnimation();
+    window.backgroundAnimation = new BackgroundAnimation();
 });

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/portfolio-gallery.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
@@ -85,16 +86,6 @@
             </p>
         </section>
 
-        <section id="projects" class="projects-section">
-            <h2>SERVICES</h2>
-            <div id="projects-window" class="content-window">
-                <div class="window-content">
-                    <div class="projects-grid">
-                        <!-- Projects will be dynamically loaded here -->
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <section id="contact" class="contact-section">
             <h2>CONTACT</h2>
@@ -140,9 +131,12 @@
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2>ABOUT</h2>
+                <button class="menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-            <div class="window-content">
-                <div class="about-grid">
+            <div class="window-content about-scrollable">
+                <div class="about-hero">
                     <div class="about-image-container">
                         <img src="images/profile.webp" alt="Amanda's Profile" class="about-image">
                         <div class="about-social">
@@ -154,28 +148,82 @@
                             </a>
                         </div>
                     </div>
-                    <div class="about-text">
+                    <div class="about-intro">
                         <h3>Creative Producer for Fashion & Luxury</h3>
-                        <p>I am a fashion designer and creative director with a deep passion for avant-garde design and sustainable fashion. My work combines traditional craftsmanship with innovative techniques, resulting in unique pieces that tell a story of elegance and consciousness.</p>
-                        <p>With years of experience in the luxury fashion industry, I've developed a keen eye for detail and a strong understanding of what makes a design truly exceptional. My approach is rooted in the belief that fashion should be both beautiful and responsible.</p>
-                        <div class="about-highlights">
-                            <div class="highlight-item">
-                                <i class="fas fa-star"></i>
-                                <h4>Vision</h4>
-                                <p>Creating sustainable luxury that respects our environment while pushing creative boundaries.</p>
+                        <p class="intro-tagline">Crafting sustainable luxury experiences through innovative design and conscious creativity.</p>
+                    </div>
+                </div>
+
+                <div class="about-sections">
+                    <section class="about-section mission-section">
+                        <div class="section-header">
+                            <div class="section-icon-wrapper">
+                                <i class="fas fa-compass section-icon"></i>
                             </div>
-                            <div class="highlight-item">
-                                <i class="fas fa-palette"></i>
-                                <h4>Expertise</h4>
-                                <p>Combining traditional craftsmanship with innovative techniques for unique designs.</p>
+                            <h4>Mission</h4>
+                        </div>
+                        <div class="section-content">
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+                        </div>
+                    </section>
+
+                    <section class="about-section vision-section">
+                        <div class="section-header">
+                            <div class="section-icon-wrapper">
+                                <i class="fas fa-eye section-icon"></i>
                             </div>
-                            <div class="highlight-item">
-                                <i class="fas fa-heart"></i>
-                                <h4>Passion</h4>
-                                <p>Dedicated to fashion, food, and flowers - my biggest obsessions and sources of inspiration.</p>
+                            <h4>Vision</h4>
+                        </div>
+                        <div class="section-content">
+                            <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.</p>
+                            <p>Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam.</p>
+                            <p>Nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.</p>
+                            <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.</p>
+                        </div>
+                    </section>
+
+                    <section class="about-section expertise-section">
+                        <div class="section-header">
+                            <i class="fas fa-star section-icon"></i>
+                            <h4>Expertise</h4>
+                        </div>
+                        <div class="section-content">
+                            <div class="expertise-grid">
+                                <div class="expertise-item">
+                                    <i class="fas fa-palette"></i>
+                                    <h5>Creative Direction</h5>
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                                </div>
+                                <div class="expertise-item">
+                                    <i class="fas fa-leaf"></i>
+                                    <h5>Sustainable Fashion</h5>
+                                    <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                                </div>
+                                <div class="expertise-item">
+                                    <i class="fas fa-gem"></i>
+                                    <h5>Luxury Branding</h5>
+                                    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                                </div>
+                                <div class="expertise-item">
+                                    <i class="fas fa-camera"></i>
+                                    <h5>Visual Storytelling</h5>
+                                    <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                                </div>
+                                <div class="expertise-item">
+                                    <i class="fas fa-users"></i>
+                                    <h5>Team Leadership</h5>
+                                    <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
+                                </div>
+                                <div class="expertise-item">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <h5>Innovation Strategy</h5>
+                                    <p>Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -187,43 +235,17 @@
                 <button class="back-btn">
                     <i class="fas fa-arrow-left"></i>
                 </button>
-                <h2>SERVICES</h2>
+                <h2>PORTFOLIO</h2>
+                <button class="menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
             <div class="window-content">
-                <div class="projects-intro">
-                    <p>Here are some of my recent projects that showcase my creative vision and dedication to sustainable luxury fashion:</p>
+                <div class="portfolio-intro">
+                    <p>A curated selection of my creative work in fashion and luxury design.</p>
                 </div>
-                <div class="projects-grid">
-                    <div class="project-card">
-                        <div class="project-image">
-                            <img src="images/project1.jpg" alt="Ethereal Collection" class="project-img">
-                        </div>
-                        <div class="project-info">
-                            <h3>ETHEREAL COLLECTION</h3>
-                            <p>A sustainable luxury collection inspired by natural phenomena, featuring organic materials and innovative dyeing techniques.</p>
-                            <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-image">
-                            <img src="images/project2.jpg" alt="Metamorphosis" class="project-img">
-                        </div>
-                        <div class="project-info">
-                            <h3>METAMORPHOSIS</h3>
-                            <p>An experimental collection exploring transformation in fashion through adaptable and convertible pieces.</p>
-                            <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-image">
-                            <img src="images/project3.jpg" alt="Digital Fashion" class="project-img">
-                        </div>
-                        <div class="project-info">
-                            <h3>DIGITAL FASHION</h3>
-                            <p>A groundbreaking virtual couture collection pushing the boundaries of digital design and sustainability.</p>
-                            <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
+                <div class="portfolio-gallery" id="portfolio-gallery">
+                    <!-- Gallery images will be loaded dynamically from Tina CMS -->
                 </div>
             </div>
         </div>
@@ -236,55 +258,72 @@
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2>CONTACT</h2>
+                <button class="menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
             <div class="window-content">
-                <div class="contact-grid">
-                    <div class="contact-form-container">
-                        <h3>Get in Touch</h3>
-                        <p>I'm always interested in collaborating on innovative and sustainable fashion projects. Let's create something beautiful together.</p>
-                        <form class="contact-form">
-                            <div class="form-group">
-                                <label for="name">Name</label>
-                                <input type="text" id="name" name="name" placeholder="Your Name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" id="email" name="email" placeholder="Your Email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="message">Message</label>
-                                <textarea id="message" name="message" placeholder="Your Message" required></textarea>
-                            </div>
-                            <button type="submit" class="submit-btn">Send Message</button>
-                        </form>
+                <div class="contact-content">
+                    <div class="contact-intro">
+                        <h3>For Commissions & Enquiries</h3>
+                        <p>I'm passionate about creating bespoke fashion experiences that blend luxury with sustainability. Whether you're looking for custom pieces, creative direction for your brand, or collaborative projects that push the boundaries of conscious design, I'd love to hear from you.</p>
+                        <p>From haute couture commissions to brand consultancy, editorial styling to sustainable fashion initiatives - let's explore how we can bring your vision to life through innovative and responsible design.</p>
                     </div>
-                    <div class="contact-info-container">
-                        <div class="contact-info">
-                            <div class="contact-item">
-                                <i class="fas fa-envelope"></i>
-                                <div>
-                                    <h4>Email</h4>
-                                    <p><a href="mailto:amandamichelena@gmail.com">amandamichelena@gmail.com</a></p>
-                                </div>
+                    
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <h4>Email</h4>
+                                <p><a href="mailto:amandamichelena@gmail.com">amandamichelena@gmail.com</a></p>
                             </div>
-                            <div class="contact-item">
-                                <i class="fab fa-instagram"></i>
-                                <div>
-                                    <h4>Instagram</h4>
-                                    <p><a href="https://instagram.com/amandamichelena" target="_blank">@amandamichelena</a></p>
-                                </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fab fa-instagram"></i>
+                            <div>
+                                <h4>Instagram</h4>
+                                <p><a href="https://instagram.com/amandamichelena" target="_blank">@amandamichelena</a></p>
                             </div>
-                            <div class="contact-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <div>
-                                    <h4>Location</h4>
-                                    <p>Barcelona, Spain</p>
-                                </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <h4>Location</h4>
+                                <p>Barcelona, Spain</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="main-footer" class="main-footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Amanda Michelena</p>
+        </div>
+    </footer>
+
+    <!-- Navigation Menu Dropdown -->
+    <div id="nav-menu" class="nav-menu">
+        <div class="nav-menu-content">
+            <button class="nav-menu-item" data-action="home">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </button>
+            <button class="nav-menu-item" data-action="about">
+                <i class="fas fa-user"></i>
+                <span>About</span>
+            </button>
+            <button class="nav-menu-item" data-action="portfolio">
+                <i class="fas fa-briefcase"></i>
+                <span>Portfolio</span>
+            </button>
+            <button class="nav-menu-item" data-action="contact">
+                <i class="fas fa-envelope"></i>
+                <span>Contact</span>
+            </button>
         </div>
     </div>
 
@@ -296,6 +335,6 @@
 
     <script src="js/background.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/projects.js"></script>
+    <script src="js/portfolio-gallery.js"></script>
 </body>
 </html>
