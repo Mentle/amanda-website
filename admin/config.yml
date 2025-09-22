@@ -2,6 +2,7 @@ backend:
   name: github
   repo: Mentle/amanda-website
   branch: main
+  auth_type: pkce-sha256
 
 media_folder: "images/uploads"
 public_folder: "/images/uploads"
