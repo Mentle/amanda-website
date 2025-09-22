@@ -1,24 +1,13 @@
-# Netlify config for CMS deployment from same repo
+# Netlify config for simple CMS
 [build]
-  command = "cd amanda-portfolio-cms && npm install && NEXT_PUBLIC_TINA_CLIENT_ID=demo TINA_TOKEN=demo npm run build"
-  publish = "amanda-portfolio-cms/.next"
+  publish = "."
 
+# Enable Netlify Identity for CMS authentication
 [build.environment]
   NODE_VERSION = "18"
 
-# Handle all CMS routes
+# Redirect admin to CMS
 [[redirects]]
   from = "/admin/*"
-  to = "/admin/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/api/*"
-  to = "/api/:splat"
-  status = 200
-
-# Fallback for SPA routing
-[[redirects]]
-  from = "/*"
   to = "/admin/index.html"
   status = 200
