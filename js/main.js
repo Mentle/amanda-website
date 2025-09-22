@@ -435,8 +435,134 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize footer
     initializeFooter();
 
+    // Reset window styles function (needs to be accessible globally)
+    function resetWindowStyles(window) {
+        // Reset all our custom aggressive styles to allow original system to work
+        window.style.display = '';
+        window.style.opacity = '';
+        window.style.visibility = '';
+        window.style.zIndex = '';
+        window.style.transform = '';
+        window.style.pointerEvents = '';
+        
+        // Reset window content styles too
+        const windowContent = window.querySelector('.window-content');
+        if (windowContent) {
+            windowContent.style.display = '';
+            windowContent.style.opacity = '';
+            windowContent.style.visibility = '';
+        }
+        
+        console.log('🔄 Reset styles for window:', window.id);
+    }
+
     // Initialize navigation menu
     initializeNavMenu();
+
+    // Add event listeners to back buttons to reset window styles and handle menu navigation
+    document.querySelectorAll('.back-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const currentWindow = btn.closest('.content-window');
+            
+            // Check if this window was opened via hamburger menu
+            if (currentWindow && currentWindow.getAttribute('data-opened-via-menu') === 'true') {
+                console.log('🔙 Back button clicked from menu-opened window, going home');
+                e.preventDefault(); // Prevent default back button behavior
+                e.stopPropagation();
+                
+                // AGGRESSIVELY close ALL windows manually (bypass original system)
+                const allWindows = document.querySelectorAll('.content-window');
+                allWindows.forEach(window => {
+                    console.log('🔥 Force closing window:', window.id);
+                    
+                    // Nuclear-level hiding
+                    window.classList.remove('visible', 'active', 'show', 'open');
+                    window.style.display = 'none';
+                    window.style.opacity = '0';
+                    window.style.visibility = 'hidden';
+                    window.style.zIndex = '-999';
+                    window.style.transform = 'translateY(-100vh)';
+                    window.style.pointerEvents = 'none';
+                    
+                    // Hide window content
+                    const windowContent = window.querySelector('.window-content');
+                    if (windowContent) {
+                        windowContent.style.display = 'none';
+                        windowContent.style.opacity = '0';
+                        windowContent.style.visibility = 'hidden';
+                    }
+                    
+                    // Reset styles after forcing hide
+                    resetWindowStyles(window);
+                    window.removeAttribute('data-opened-via-menu');
+                });
+                
+                // Force DOM updates
+                document.body.offsetHeight;
+                
+                // Reset body classes
+                document.body.classList.remove('window-open');
+                document.documentElement.classList.remove('window-open');
+                
+                // Use the EXACT same animation as the original closeWindow function
+                const backgroundInstance = window.backgroundAnimation;
+                if (backgroundInstance) {
+                    // Don't show model immediately - let the scatter animation control it
+                    // Reset rotation first (same as original)
+                    if (backgroundInstance.model && backgroundInstance.baseRotation) {
+                        backgroundInstance.targetRotation.copy(backgroundInstance.baseRotation);
+                        backgroundInstance.modelRotation.copy(backgroundInstance.baseRotation);
+                        backgroundInstance.model.rotation.set(
+                            backgroundInstance.baseRotation.x,
+                            backgroundInstance.baseRotation.y,
+                            backgroundInstance.baseRotation.z
+                        );
+                    }
+                    
+                    // Reset pointer events based on scroll position (same as original)
+                    if (backgroundInstance.scrollProgress > 0.7) {
+                        backgroundInstance.renderer.domElement.style.pointerEvents = 'auto';
+                    } else {
+                        backgroundInstance.renderer.domElement.style.pointerEvents = 'none';
+                    }
+                    
+                    // Remove scroll prevention (same as original)
+                    if (backgroundInstance.windowScrollHandler) {
+                        document.removeEventListener('wheel', backgroundInstance.windowScrollHandler);
+                        document.removeEventListener('touchmove', backgroundInstance.windowScrollHandler);
+                    }
+                    
+                    // Start scatter-in animation (EXACT same as original)
+                    backgroundInstance.textScatterActive = true;
+                    backgroundInstance.textScatterDirection = 'in';
+                    backgroundInstance.activeWindowId = null;
+                    
+                    // Wait 500ms then scroll to bottom instantly (EXACT same as original)
+                    setTimeout(() => {
+                        // Set scroll to bottom without animation (same as original)
+                        document.documentElement.style.scrollBehavior = 'auto';
+                        document.documentElement.scrollTop = document.documentElement.scrollHeight;
+                        document.documentElement.style.scrollBehavior = '';
+                        
+                        // Show model AFTER scroll is complete to avoid flash
+                        setTimeout(() => {
+                            if (backgroundInstance.model) {
+                                backgroundInstance.model.visible = true;
+                            }
+                        }, 50); // Small delay after scroll completes
+                    }, 500); // Match the original 500ms timing
+                }
+                
+                return false; // Prevent further event handling
+            } else {
+                console.log('🔙 Back button clicked, resetting all window styles (normal behavior)');
+                const allWindows = document.querySelectorAll('.content-window');
+                allWindows.forEach(window => {
+                    resetWindowStyles(window);
+                });
+            }
+        });
+    });
 
     // Navigation menu functionality
     function initializeNavMenu() {
@@ -494,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isMenuOpen = false;
         }
 
+
         function handleNavigation(action) {
             // Get the background animation instance
             const backgroundCanvas = document.getElementById('background-canvas');
@@ -501,16 +628,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
             switch (action) {
                 case 'home':
-                    // Close any open windows using the existing system
-                    const openWindows = document.querySelectorAll('.content-window.visible');
-                    openWindows.forEach(window => {
-                        if (backgroundInstance && backgroundInstance.closeWindow) {
-                            backgroundInstance.closeWindow(window.id);
-                        }
+                    // Reset ALL windows to clean state before closing
+                    const allWindows = document.querySelectorAll('.content-window');
+                    allWindows.forEach(window => {
+                        resetWindowStyles(window);
+                        window.classList.remove('visible');
+                        window.style.display = 'none';
+                        window.removeAttribute('data-opened-via-menu');
                     });
+                    
+                    // Reset body classes
+                    document.body.classList.remove('window-open');
+                    document.documentElement.classList.remove('window-open');
+                    
+                    // Reset background animation to home state
+                    if (backgroundInstance) {
+                        // Show model
+                        if (backgroundInstance.model) {
+                            backgroundInstance.model.visible = true;
+                        }
+                        
+                        // Reset animation states
+                        backgroundInstance.activeWindowId = null;
+                        backgroundInstance.textScatterActive = false;
+                        backgroundInstance.textScatterProgress = 0;
+                        
+                        // Remove scroll prevention
+                        if (backgroundInstance.windowScrollHandler) {
+                            document.removeEventListener('wheel', backgroundInstance.windowScrollHandler);
+                            document.removeEventListener('touchmove', backgroundInstance.windowScrollHandler);
+                        }
+                    }
+                    
+                    // Scroll to TOP of page (home position)
                     setTimeout(() => {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }, 300);
+                    }, 100);
                     break;
                 case 'about':
                     switchToWindow('about-window');
@@ -525,35 +678,110 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function switchToWindow(windowId) {
-            // Direct window switching without going through homepage
+            console.log('🔄 Switching to window:', windowId);
+            
+            // Get all content windows
+            const allWindows = document.querySelectorAll('.content-window');
             const targetWindow = document.getElementById(windowId);
-            const openWindows = document.querySelectorAll('.content-window.visible');
             
             if (targetWindow) {
-                // Ensure window-open state is maintained
-                document.body.classList.add('window-open');
-                document.documentElement.classList.add('window-open');
-                
-                // Hide current windows instantly
-                openWindows.forEach(window => {
-                    window.classList.remove('visible');
+                // Step 1: NUCLEAR-LEVEL hide ALL windows immediately
+                allWindows.forEach(window => {
+                    // Remove all possible visible classes
+                    window.classList.remove('visible', 'active', 'show', 'open');
+                    
+                    // Set all possible hide properties
                     window.style.display = 'none';
+                    window.style.opacity = '0';
+                    window.style.visibility = 'hidden';
+                    window.style.zIndex = '-999';
+                    window.style.transform = 'translateY(-100vh)';
+                    window.style.pointerEvents = 'none';
+                    
+                    // Mark ALL windows as menu-opened since we're using hamburger navigation
+                    window.setAttribute('data-opened-via-menu', 'true');
+                    
+                    // Also hide the window content specifically
+                    const windowContent = window.querySelector('.window-content');
+                    if (windowContent) {
+                        windowContent.style.display = 'none';
+                        windowContent.style.opacity = '0';
+                        windowContent.style.visibility = 'hidden';
+                    }
+                    
+                    console.log('🚫 Nuclear-level hiding window:', window.id, '(marked as menu-opened)');
                 });
                 
-                // Show new window instantly
-                targetWindow.style.display = 'block';
-                targetWindow.classList.add('visible');
+                // Force immediate DOM update
+                document.body.offsetHeight;
                 
-                // Initialize portfolio gallery if needed
-                if (windowId === 'services-window' && typeof window.initPortfolioGallery === 'function') {
-                    window.initPortfolioGallery();
-                }
-                
-                // Hide 3D model during window display
-                const backgroundInstance = window.backgroundAnimation;
-                if (backgroundInstance && backgroundInstance.model) {
-                    backgroundInstance.model.visible = false;
-                }
+                // Step 2: Show only the target window after ensuring others are hidden
+                setTimeout(() => {
+                    console.log('✅ Showing target window:', windowId);
+                    
+                    // Double-check all others are STILL hidden with nuclear force
+                    allWindows.forEach(window => {
+                        if (window.id !== windowId) {
+                            window.classList.remove('visible', 'active', 'show', 'open');
+                            window.style.display = 'none';
+                            window.style.opacity = '0';
+                            window.style.visibility = 'hidden';
+                            window.style.zIndex = '-999';
+                            window.style.transform = 'translateY(-100vh)';
+                            window.style.pointerEvents = 'none';
+                            
+                            // Double-hide window content
+                            const windowContent = window.querySelector('.window-content');
+                            if (windowContent) {
+                                windowContent.style.display = 'none';
+                                windowContent.style.opacity = '0';
+                                windowContent.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+                    
+                    // Show target window with FULL visibility restoration
+                    targetWindow.style.display = 'block';
+                    targetWindow.style.opacity = '1';
+                    targetWindow.style.visibility = 'visible';
+                    targetWindow.style.zIndex = '1001';
+                    targetWindow.style.transform = 'translateY(0)';
+                    targetWindow.style.pointerEvents = 'auto';
+                    targetWindow.classList.add('visible');
+                    
+                    // Restore target window content
+                    const targetContent = targetWindow.querySelector('.window-content');
+                    if (targetContent) {
+                        targetContent.style.display = 'block';
+                        targetContent.style.opacity = '1';
+                        targetContent.style.visibility = 'visible';
+                    }
+                    
+                    // Maintain window-open state
+                    document.body.classList.add('window-open');
+                    document.documentElement.classList.add('window-open');
+                    
+                    // Hide 3D model
+                    const backgroundInstance = window.backgroundAnimation;
+                    if (backgroundInstance && backgroundInstance.model) {
+                        backgroundInstance.model.visible = false;
+                    }
+                    
+                    // Initialize portfolio gallery if needed
+                    if (windowId === 'services-window' && typeof window.initPortfolioGallery === 'function') {
+                        window.initPortfolioGallery();
+                    }
+                    
+                    // Mark this window as opened via hamburger menu
+                    targetWindow.setAttribute('data-opened-via-menu', 'true');
+                    
+                    // Force multiple reflows to ensure changes stick
+                    targetWindow.offsetHeight;
+                    document.body.offsetHeight;
+                    
+                    console.log('🎯 Window switch complete. Target visible:', targetWindow.style.display, targetWindow.classList.contains('visible'));
+                    
+                }, 100);
             }
         }
     }
