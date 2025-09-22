@@ -1,6 +1,6 @@
 # Netlify config for CMS deployment from same repo
 [build]
-  command = "cd amanda-portfolio-cms && npm install && npm run build"
+  command = "cd amanda-portfolio-cms && npm install && NEXT_PUBLIC_TINA_CLIENT_ID=demo TINA_TOKEN=demo npm run build"
   publish = "amanda-portfolio-cms/.next"
 
 [build.environment]
