@@ -1,0 +1,24 @@
+# Netlify config for CMS deployment from same repo
+[build]
+  command = "cd amanda-portfolio-cms && npm install && npm run build"
+  publish = "amanda-portfolio-cms/.next"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Handle all CMS routes
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "/api/:splat"
+  status = 200
+
+# Fallback for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/admin/index.html"
+  status = 200
