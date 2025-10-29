@@ -14,82 +14,55 @@ class PortfolioGallery {
         this.init();
     }
 
-    async init() {
-        await this.loadPortfolioData();
-        await this.loadSiteSettings();
+    init() {
+        this.loadPortfolioData();
         this.renderGallery();
         this.setupLightbox();
     }
 
-    async loadPortfolioData() {
-        try {
-            // Load from our API endpoint that serves Tina CMS data
-            const response = await fetch('/api/portfolio');
-            
-            if (response.ok) {
-                this.portfolioItems = await response.json();
-                console.log('✅ Loaded portfolio data from Tina CMS:', this.portfolioItems);
-                
-                // If no items, use fallback
-                if (this.portfolioItems.length === 0) {
-                    console.warn('No portfolio items found, using fallback data');
-                    this.portfolioItems = this.getFallbackData();
-                }
-            } else {
-                throw new Error(`API responded with status: ${response.status}`);
-            }
-
-        } catch (error) {
-            console.error('Error loading portfolio data from API:', error);
-            console.log('Using fallback data instead');
-            this.portfolioItems = this.getFallbackData();
-        }
+    loadPortfolioData() {
+        // Use static portfolio data
+        this.portfolioItems = this.getStaticPortfolioData();
+        console.log('✅ Loaded static portfolio data:', this.portfolioItems);
     }
 
-    async loadSiteSettings() {
-        try {
-            const response = await fetch('/api/settings');
-            if (response.ok) {
-                const settings = await response.json();
-                
-                // Update portfolio intro text
-                const portfolioIntro = document.querySelector('.portfolio-intro p');
-                if (portfolioIntro && settings.portfolioIntro) {
-                    portfolioIntro.textContent = settings.portfolioIntro;
-                }
-                
-                console.log('✅ Loaded site settings from Tina CMS:', settings);
-            }
-        } catch (error) {
-            console.error('Error loading site settings:', error);
-        }
-    }
-
-    getFallbackData() {
+    getStaticPortfolioData() {
         return [
             {
                 title: "Ethereal Collection",
                 description: "A sustainable luxury collection inspired by natural phenomena.",
-                image: "images/profile.webp", // Using existing image as placeholder
+                heroImage: "images/profile.webp",
                 alt: "Ethereal Collection",
+                category: "Fashion Design",
+                year: "2024",
+                client: "Independent Project",
                 order: 1,
-                featured: true
+                featured: true,
+                projectImages: []
             },
             {
                 title: "Metamorphosis",
                 description: "Experimental pieces exploring transformation in fashion.",
-                image: "images/profile.webp", // Using existing image as placeholder
+                heroImage: "images/profile.webp",
                 alt: "Metamorphosis Collection",
+                category: "Experimental",
+                year: "2023",
+                client: "Art Gallery Collaboration",
                 order: 2,
-                featured: false
+                featured: false,
+                projectImages: []
             },
             {
                 title: "Digital Fashion",
                 description: "Virtual couture pushing the boundaries of digital design.",
-                image: "images/profile.webp", // Using existing image as placeholder
+                heroImage: "images/profile.webp",
                 alt: "Digital Fashion Collection",
+                category: "Digital Design",
+                year: "2024",
+                client: "Tech Fashion Week",
                 order: 3,
-                featured: true
+                featured: true,
+                projectImages: []
             }
         ];
     }
