@@ -566,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Navigation menu functionality
     function initializeNavMenu() {
-        const menuButtons = document.querySelectorAll('.menu-btn');
+        const menuButtons = document.querySelectorAll('.menu-btn, .header-menu-btn');
         const navMenu = document.getElementById('nav-menu');
         const menuItems = document.querySelectorAll('.nav-menu-item');
         let isMenuOpen = false;

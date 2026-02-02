@@ -1,0 +1,298 @@
+/* Page Content Styles for Multi-Page Site */
+.page-content {
+    min-height: 100vh;
+    padding: 100px 0 4rem 0;
+    max-width: 100%;
+    margin: 0;
+    color: var(--text-color);
+}
+
+/* Page title styling */
+.page-content .page-title {
+    font-size: 2.5rem;
+    margin: 0 0 3rem 0;
+    text-align: center;
+    letter-spacing: 2px;
+    font-family: 'Italiana', serif;
+    color: var(--text-color);
+    position: relative;
+}
+
+.page-content .page-title:after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: var(--text-color);
+}
+
+/* About page specific styles */
+.about-hero {
+    display: flex;
+    gap: 3rem;
+    margin-bottom: 4rem;
+    align-items: center;
+}
+
+.about-image-container {
+    position: relative;
+    flex: 0 0 300px;
+}
+
+.about-image {
+    width: 100%;
+    border-radius: 12px;
+    display: block;
+}
+
+.about-social {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.about-intro {
+    flex: 1;
+}
+
+.about-intro h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.intro-tagline {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.8;
+}
+
+.about-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.about-section {
+    padding: 2rem 0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--text-color-rgb), 0.1);
+    border-radius: 50%;
+}
+
+.section-icon {
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.section-header h4 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: var(--text-color);
+}
+
+.section-content p {
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    opacity: 0.85;
+}
+
+.expertise-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.expertise-item {
+    padding: 2rem;
+    background: rgba(var(--text-color-rgb), 0.05);
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.expertise-item:hover {
+    background: rgba(var(--text-color-rgb), 0.08);
+    transform: translateY(-5px);
+}
+
+.expertise-item i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.expertise-item h5 {
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.expertise-item p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    opacity: 0.75;
+}
+
+/* Portfolio page specific styles */
+.portfolio-intro {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.portfolio-intro p {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+/* Contact page specific styles */
+.contact-content {
+    max-width: 100%;
+    margin: 0;
+}
+
+.contact-intro {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.contact-intro h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+.contact-intro p {
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    opacity: 0.85;
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.contact-item {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    padding: 2rem;
+    background: rgba(var(--text-color-rgb), 0.05);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.contact-item:hover {
+    background: rgba(var(--text-color-rgb), 0.08);
+    transform: translateX(5px);
+}
+
+.contact-item i {
+    font-size: 1.5rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    margin-top: 0.25rem;
+}
+
+.contact-item h4 {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-color);
+}
+
+.contact-item p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+.contact-item a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+
+.contact-item a:hover {
+    opacity: 0.7;
+}
+
+/* Social links */
+.social-link {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--text-color-rgb), 0.1);
+    border-radius: 50%;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    background: rgba(var(--text-color-rgb), 0.2);
+    transform: scale(1.1);
+}
+
+/* Footer positioning for separate pages */
+body .main-footer {
+    position: relative !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .page-content {
+        padding: 80px 0 3rem 0;
+    }
+    
+    .page-content .page-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .about-hero {
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .about-image-container {
+        flex: 0 0 auto;
+        max-width: 300px;
+    }
+    
+    .expertise-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-item {
+        padding: 1.5rem;
+    }
+}

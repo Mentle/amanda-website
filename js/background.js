@@ -71,6 +71,16 @@ class BackgroundAnimation {
         this.originalTextGeometry = null; // Store original merged geometry for resize handling
         this.sampledTextPoints = null;    // Store sampled points for text
         this.pointGroups = null;         // Store which points belong to which word
+        
+        // Color adjustment parameters
+        this.colorParams = {
+            brightness: 1.0,
+            saturation: 1.0,
+            vibrance: 0.0,
+            contrast: 1.0,
+            whiteBalance: 0.0,
+            warmth: 0.0
+        };
 
         // Text scatter animation properties
         this.textScatterProgress = 0;
@@ -87,7 +97,8 @@ class BackgroundAnimation {
         this.camera.position.copy(this.initialCameraPosition);
         this.camera.lookAt(0, 0, 0);
 
-        // Lights
+        // Set up color editing GUI
+        this.setupColorGUI();
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
@@ -198,6 +209,191 @@ class BackgroundAnimation {
     }
 
     // --------------------------------------------------
+    //  COLOR EDITING GUI
+    // --------------------------------------------------
+    
+    setupColorGUI() {
+        if (typeof dat === 'undefined') {
+            console.warn('dat.GUI not loaded, color controls unavailable');
+            return;
+        }
+        
+        const gui = new dat.GUI();
+        gui.domElement.style.position = 'fixed';
+        gui.domElement.style.top = '80px';
+        gui.domElement.style.right = '20px';
+        gui.domElement.style.zIndex = '999999';
+        gui.domElement.style.pointerEvents = 'auto';
+        
+        // Ensure all child elements also have pointer events
+        const style = document.createElement('style');
+        style.textContent = `
+            .dg.ac { pointer-events: auto !important; z-index: 999999 !important; }
+            .dg.ac * { pointer-events: auto !important; }
+        `;
+        document.head.appendChild(style);
+        
+        const colorFolder = gui.addFolder('Flower Colors');
+        
+        colorFolder.add(this.colorParams, 'brightness', 0.1, 3.0).step(0.01).name('Brightness').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'saturation', 0.0, 3.0).step(0.01).name('Saturation').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'vibrance', -1.0, 3.0).step(0.01).name('Vibrance').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'contrast', 0.5, 2.0).step(0.01).name('Contrast').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'whiteBalance', -1.0, 1.0).step(0.01).name('White Balance').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'warmth', -1.0, 1.0).step(0.01).name('Warmth').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.open();
+        
+        this.gui = gui;
+    }
+    
+    applyColorTransform() {
+        if (!this.baseColors || !this.model) return;
+        
+        const colors = this.model.geometry.attributes.color.array;
+        
+        for (let i = 0; i < this.baseColors.length; i += 3) {
+            // Get original RGB values from the unmodified backup
+            let r = this.baseColors[i];
+            let g = this.baseColors[i + 1];
+            let b = this.baseColors[i + 2];
+            
+            // Apply saturation
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            r = gray + (r - gray) * this.colorParams.saturation;
+            g = gray + (g - gray) * this.colorParams.saturation;
+            b = gray + (b - gray) * this.colorParams.saturation;
+            
+            // Apply vibrance (boosts muted colors more than saturated ones)
+            if (this.colorParams.vibrance !== 0) {
+                const max = Math.max(r, g, b);
+                const avg = (r + g + b) / 3;
+                const amt = ((Math.abs(max - avg) * 2 - 1) * this.colorParams.vibrance) * (1 - max);
+                r += (max - r) * amt;
+                g += (max - g) * amt;
+                b += (max - b) * amt;
+            }
+            
+            // Apply contrast
+            r = ((r - 0.5) * this.colorParams.contrast) + 0.5;
+            g = ((g - 0.5) * this.colorParams.contrast) + 0.5;
+            b = ((b - 0.5) * this.colorParams.contrast) + 0.5;
+            
+            // Apply white balance (shift color temperature)
+            if (this.colorParams.whiteBalance !== 0) {
+                if (this.colorParams.whiteBalance > 0) {
+                    // Warmer white balance: boost reds/yellows, reduce blues
+                    r += this.colorParams.whiteBalance * 0.15;
+                    g += this.colorParams.whiteBalance * 0.05;
+                    b -= this.colorParams.whiteBalance * 0.15;
+                } else {
+                    // Cooler white balance: boost blues, reduce reds/yellows
+                    const wb = Math.abs(this.colorParams.whiteBalance);
+                    b += wb * 0.15;
+                    g += wb * 0.02;
+                    r -= wb * 0.15;
+                }
+            }
+            
+            // Apply warmth (shift toward orange/blue)
+            if (this.colorParams.warmth !== 0) {
+                if (this.colorParams.warmth > 0) {
+                    // Warmer: add red, reduce blue
+                    r += this.colorParams.warmth * 0.1;
+                    b -= this.colorParams.warmth * 0.1;
+                } else {
+                    // Cooler: add blue, reduce red
+                    b += Math.abs(this.colorParams.warmth) * 0.1;
+                    r -= Math.abs(this.colorParams.warmth) * 0.1;
+                }
+            }
+            
+            // Apply brightness
+            r *= this.colorParams.brightness;
+            g *= this.colorParams.brightness;
+            b *= this.colorParams.brightness;
+            
+            // Clamp values
+            r = Math.max(0, Math.min(1, r));
+            g = Math.max(0, Math.min(1, g));
+            b = Math.max(0, Math.min(1, b));
+            
+            // Update both the geometry colors and originalColors (used by animations)
+            colors[i] = r;
+            colors[i + 1] = g;
+            colors[i + 2] = b;
+            
+            this.originalColors[i] = r;
+            this.originalColors[i + 1] = g;
+            this.originalColors[i + 2] = b;
+        }
+        
+        this.model.geometry.attributes.color.needsUpdate = true;
+    }
+    
+    // Helper functions for HSL conversion
+    rgbToHsl(r, g, b) {
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+        
+        if (max === min) {
+            h = s = 0;
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                case g: h = ((b - r) / d + 2) / 6; break;
+                case b: h = ((r - g) / d + 4) / 6; break;
+            }
+        }
+        return [h, s, l];
+    }
+    
+    hslToRgb(h, s, l) {
+        let r, g, b;
+        
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+        
+        return [r, g, b];
+    }
+
+    // --------------------------------------------------
     //  MOUSE & ROTATION
     // --------------------------------------------------
 
@@ -206,24 +402,24 @@ class BackgroundAnimation {
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-        // Calculate velocity (push points away from the mouse if wanted)
+        // Calculate velocity
         this.mouseVelocity.x = this.mouse.x - this.prevMouse.x;
         this.mouseVelocity.y = this.mouse.y - this.prevMouse.y;
-        
-        // Detect if this is likely a touch event (smaller movements)
-        const isTouchEvent = 'ontouchstart' in window && Math.abs(this.mouseVelocity.x) + Math.abs(this.mouseVelocity.y) < 0.1;
-        
-        // Apply stronger smoothing for touch events
-        const smoothingFactor = isTouchEvent ? 0.05 : 0.1;
+        this.prevMouse.copy(this.mouse);
 
-        this.prevMouse.x = this.mouse.x;
-        this.prevMouse.y = this.mouse.y;
+        // Disable mouse rotation when text is visible (reassembleProgress >= 0.1)
+        if (this.disableMouseInteraction || this.reassembleProgress >= 0.1) {
+            return;
+        }
 
-        // Reduce tilt effect based on dissolve progress
-        const minTiltFactor = 0.05;
-        const tiltReduction =
-            minTiltFactor + ((1 - minTiltFactor) * (1 - (this.disperseProgress / 0.87)));
-        const tiltX = this.mouse.y * 0.5 * tiltReduction; // tilt around X-axis
+        // Reduce tilt effect based on disperse progress
+        const tiltReduction = 1 - (this.disperseProgress / 0.87);
+
+        // Use different smoothing for touch vs mouse
+        const smoothingFactor = this.isTouchDevice ? 0.03 : 0.08;
+
+        // Calculate tilt based on mouse position
+        const tiltX = -this.mouse.y * 0.3 * tiltReduction; // tilt around X-axis
         const tiltY = this.mouse.x * 0.5 * tiltReduction; // tilt around Y-axis
 
         // Update target rotation
@@ -235,7 +431,8 @@ class BackgroundAnimation {
         this.modelRotation.x += (this.targetRotation.x - this.modelRotation.x) * interpolationSpeed;
         this.modelRotation.y += (this.targetRotation.y - this.modelRotation.y) * interpolationSpeed;
 
-        if (this.model) {
+        // Only apply rotation if text is not assembled
+        if (this.model && this.reassembleProgress < 0.1) {
             this.model.rotation.x = this.modelRotation.x;
             this.model.rotation.y = this.modelRotation.y;
         }
@@ -294,7 +491,22 @@ class BackgroundAnimation {
         if (scrollProgress > 0.7) {
             // from 0.7 to 1.0 => reassembleProgress: 0..1
             const reassembleRange = 0.3; // 1.0 - 0.7
-            this.reassembleProgress = Math.min((scrollProgress - 0.7) / reassembleRange, 1);
+            const newReassembleProgress = Math.min((scrollProgress - 0.7) / reassembleRange, 1);
+            
+            // Reset rotation to base when text starts assembling
+            if (this.reassembleProgress === 0 && newReassembleProgress > 0) {
+                this.targetRotation.copy(this.baseRotation);
+                this.modelRotation.copy(this.baseRotation);
+                if (this.model) {
+                    this.model.rotation.set(
+                        this.baseRotation.x,
+                        this.baseRotation.y,
+                        this.baseRotation.z
+                    );
+                }
+            }
+            
+            this.reassembleProgress = newReassembleProgress;
         } else {
             this.reassembleProgress = 0;
         }
@@ -328,8 +540,8 @@ class BackgroundAnimation {
         // Optional swirl “intro” if still animating in
         this.updateIntroAnimation();
 
-        // Further smooth rotation if not fully dissolved
-        if (this.model && this.disperseProgress < 1) {
+        // Further smooth rotation if not fully dissolved and text not assembled
+        if (this.model && this.disperseProgress < 1 && this.reassembleProgress < 0.1) {
             this.modelRotation.x += (this.targetRotation.x - this.modelRotation.x) * 0.05;
             this.modelRotation.y += (this.targetRotation.y - this.modelRotation.y) * 0.05;
             this.model.rotation.set(
@@ -355,9 +567,8 @@ class BackgroundAnimation {
         const fov = this.camera.fov * (Math.PI / 180);
         const scale = Math.abs(this.camera.position.z - this.modelPosition.z) * Math.tan(fov / 2) * 2;
 
-        // Get theme-based color
-        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
-        const themeColor = isDarkTheme ? { r: 1, g: 1, b: 1 } : { r: 0, g: 0, b: 0 };
+        // Use white color for text points
+        const themeColor = { r: 1, g: 1, b: 1 };
 
         // Scale down the visual effect of dissolve
         const scaledDisperseProgress = this.disperseProgress * 0.17;
@@ -673,8 +884,11 @@ class BackgroundAnimation {
                 this.currentPositions = new Float32Array(this.originalPositions);
                 this.velocities = new Float32Array(this.originalPositions.length);
                 
-                // Store original colors
+                // Store original colors (this gets modified by animations)
                 this.originalColors = new Float32Array(bufferGeometry.attributes.color.array);
+                
+                // Store a backup copy that NEVER gets modified (for color transformations)
+                this.baseColors = new Float32Array(bufferGeometry.attributes.color.array);
 
                 const material = new THREE.PointsMaterial({
                     size: this.particleSize,
@@ -1176,26 +1390,36 @@ class BackgroundAnimation {
 
     preventBackgroundScroll(e) {
         if (document.body.classList.contains('window-open')) {
-            // Check if the event originated from a content window
+            // Check if the event originated from a content window or portfolio lightbox
             const path = e.composedPath ? e.composedPath() : e.path;
             const isFromWindow = path.some(el => el.classList && 
                 (el.classList.contains('content-window') || 
                  el.classList.contains('window-content') || 
-                 el.classList.contains('window-container')));
+                 el.classList.contains('window-container') ||
+                 el.classList.contains('portfolio-lightbox') ||
+                 el.classList.contains('lightbox-container')));
             
-            // Only prevent default if the event is NOT from a content window
+            // Only prevent default if the event is NOT from a content window or lightbox
             if (!isFromWindow) {
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }
-            // Allow scrolling if event originated from content window
+            // Allow scrolling if event originated from content window or lightbox
             return true;
         }
     }
 
     showWindow(windowId) {
         const window = document.getElementById(windowId);
+        
+        // Safety check: windows no longer exist in multi-page architecture
+        if (!window) {
+            // Clear activeWindowId to prevent repeated attempts
+            this.activeWindowId = null;
+            return;
+        }
+        
         window.style.display = 'block';
         
         // Initialize portfolio gallery if services window is opened
@@ -1370,23 +1594,29 @@ class BackgroundAnimation {
                 this.initTextScatterVectors();
             }
             
-            // Start scatter animation and set the window to open
+            // Start scatter animation
             this.textScatterActive = true;
             this.textScatterDirection = 'out';
             this.textScatterProgress = 0;
             
-            // Store the window ID to open after animation
+            // Determine which page to navigate to after animation
+            let targetPage = '';
             switch(groupIndex) {
                 case 0:
-                    this.activeWindowId = 'about-window';
+                    targetPage = 'about.html';
                     break;
                 case 1:
-                    this.activeWindowId = 'services-window';
+                    targetPage = 'portfolio.html';
                     break;
                 case 2:
-                    this.activeWindowId = 'contact-window';
+                    targetPage = 'contact.html';
                     break;
             }
+            
+            // Navigate after scatter animation completes (about 1 second)
+            setTimeout(() => {
+                window.location.href = targetPage;
+            }, 1000);
         }
     }
 }

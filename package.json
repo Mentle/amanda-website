@@ -1,11 +1,13 @@
 {
   "name": "amanda-portfolio",
   "version": "1.0.0",
-  "description": "Amanda Michelena's Creative Portfolio - Static Version",
+  "description": "Amanda Michelena's Creative Portfolio with Sanity CMS",
   "main": "index.html",
   "scripts": {
-    "start": "python3 -m http.server 8000",
-    "serve": "python3 -m http.server 8000"
+    "start": "live-server --port=8000 --no-browser",
+    "serve": "python3 -m http.server 8000",
+    "studio": "cd studio && npm run dev",
+    "studio:deploy": "cd studio && npm run deploy"
   },
   "keywords": [
     "portfolio",
@@ -20,5 +22,12 @@
     "type": "git",
     "url": "git+https://github.com/Mentle/amanda-website.git"
   },
-  "homepage": "https://amandamichelena.com"
+  "homepage": "https://amandamichelena.com",
+  "dependencies": {
+    "@sanity/client": "^7.14.0",
+    "@sanity/image-url": "^2.0.3"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
 }
