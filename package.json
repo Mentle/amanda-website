@@ -1,33 +1,27 @@
 {
   "name": "amanda-portfolio",
+  "private": true,
   "version": "1.0.0",
-  "description": "Amanda Michelena's Creative Portfolio with Sanity CMS",
-  "main": "index.html",
+  "type": "module",
   "scripts": {
-    "start": "live-server --port=8000 --no-browser",
-    "serve": "python3 -m http.server 8000",
-    "studio": "cd studio && npm run dev",
-    "studio:deploy": "cd studio && npm run deploy"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "keywords": [
-    "portfolio",
-    "fashion",
-    "creative",
-    "three.js",
-    "static"
-  ],
-  "author": "Amanda Michelena",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Mentle/amanda-website.git"
-  },
-  "homepage": "https://amandamichelena.com",
   "dependencies": {
-    "@sanity/client": "^7.14.0",
-    "@sanity/image-url": "^2.0.3"
+    "@sanity/client": "^6.10.0",
+    "@sanity/image-url": "^1.0.2",
+    "gl-matrix": "^3.4.4",
+    "gsap": "^3.14.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "three": "^0.128.0"
   },
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "vite": "^5.0.0"
   }
 }

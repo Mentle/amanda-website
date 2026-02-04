@@ -1,0 +1,324 @@
+.portfolio-page {
+  min-height: 100vh;
+  padding: 100px 2rem 4rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.portfolio-title {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 6vw, 4rem);
+  text-align: center;
+  margin-bottom: 3rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.portfolio-loading,
+.portfolio-empty {
+  text-align: center;
+  font-size: 1.2rem;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 4rem 0;
+}
+
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.portfolio-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.portfolio-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.portfolio-card.featured {
+  grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+  .portfolio-card.featured {
+    grid-column: span 1;
+  }
+  
+  .portfolio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portfolio-card-image {
+  position: relative;
+  aspect-ratio: 3/2;
+  overflow: hidden;
+}
+
+.portfolio-card-image img,
+.portfolio-card-image video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.portfolio-card:hover .portfolio-card-image img,
+.portfolio-card:hover .portfolio-card-image video {
+  transform: scale(1.05);
+}
+
+.portfolio-card-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 1rem;
+}
+
+.portfolio-card-overlay {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+
+.portfolio-card-category {
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.portfolio-card-info {
+  padding: 1.5rem;
+}
+
+.portfolio-card-info h3 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin: 0 0 0.5rem;
+}
+
+.portfolio-card-role {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Modal Styles */
+.portfolio-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.portfolio-modal-content {
+  background: #fff;
+  border-radius: 24px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 2rem auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.portfolio-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.portfolio-modal-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.portfolio-modal-header {
+  padding: 2rem 2rem 1rem;
+  text-align: center;
+}
+
+.portfolio-modal-category {
+  display: inline-block;
+  background: #000;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+.portfolio-modal-header h2 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  margin: 0 0 1rem;
+}
+
+.portfolio-modal-logos {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.portfolio-modal-logos img {
+  max-height: 40px;
+  max-width: 100px;
+  object-fit: contain;
+}
+
+.portfolio-modal-media {
+  width: 100%;
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.portfolio-modal-media img,
+.portfolio-modal-media video {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: cover;
+}
+
+.portfolio-modal-details {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .portfolio-modal-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portfolio-modal-details h4 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 1rem;
+  color: #000;
+}
+
+.portfolio-modal-description p {
+  line-height: 1.7;
+  color: #333;
+}
+
+.portfolio-modal-role p {
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag {
+  background: #f0f0f0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 1rem;
+  background: #f8f8f8;
+  border-radius: 12px;
+}
+
+.metric-value {
+  display: block;
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #000;
+}
+
+.metric-platform {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: capitalize;
+  margin-top: 0.25rem;
+}
+
+.portfolio-modal-info p {
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.portfolio-modal-gallery {
+  padding: 0 2rem 2rem;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.gallery-item {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gallery-item img,
+.gallery-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

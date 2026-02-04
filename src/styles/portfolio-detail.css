@@ -1,0 +1,236 @@
+.portfolio-detail-page {
+  min-height: 100vh;
+  padding: 100px 2rem 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.back-button {
+  background: none;
+  border: 2px solid #000;
+  padding: 0.8rem 1.5rem;
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.back-button:hover {
+  background: #000;
+  color: #fff;
+}
+
+.portfolio-detail-loading,
+.portfolio-detail-error {
+  text-align: center;
+  padding: 4rem 0;
+  font-size: 1.2rem;
+}
+
+.portfolio-detail-error h2 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.portfolio-detail-error button {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 1rem 2rem;
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 30px;
+  margin-top: 1rem;
+}
+
+.portfolio-detail-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.portfolio-detail-category {
+  display: inline-block;
+  background: #000;
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+}
+
+.portfolio-detail-header h1 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 4rem);
+  margin: 0 0 1.5rem;
+  letter-spacing: 1px;
+}
+
+.portfolio-detail-logos {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.portfolio-detail-logos img {
+  max-height: 50px;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+.portfolio-detail-media {
+  width: 100%;
+  margin-bottom: 4rem;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.portfolio-detail-media img,
+.portfolio-detail-media video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.portfolio-detail-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  margin-bottom: 4rem;
+}
+
+@media (max-width: 768px) {
+  .portfolio-detail-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.portfolio-detail-description h2,
+.portfolio-detail-meta h3 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.portfolio-detail-description p {
+  line-height: 1.8;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.portfolio-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.portfolio-detail-role .role-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+}
+
+.portfolio-detail-role .role-desc {
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.skill-tag {
+  background: #f0f0f0;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: #f8f8f8;
+  border-radius: 16px;
+}
+
+.metric-value {
+  display: block;
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  color: #000;
+  margin-bottom: 0.5rem;
+}
+
+.metric-platform {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: capitalize;
+}
+
+.portfolio-detail-info p {
+  margin: 0 0 0.5rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+.portfolio-detail-gallery {
+  margin-top: 4rem;
+}
+
+.portfolio-detail-gallery h2 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.gallery-item {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-item img,
+.gallery-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

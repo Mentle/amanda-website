@@ -1,5 +1,7 @@
 class BackgroundAnimation {
-    constructor() {
+    constructor(onLoadCallback) {
+        this.onLoadCallback = onLoadCallback;
+        
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(
             75,
@@ -19,10 +21,17 @@ class BackgroundAnimation {
 
         this.container = document.getElementById('background-canvas');
 
+        // Control whether scroll interactions are active (only on home page)
+        this.isActive = true;
+
         // Mouse vectors for model rotation
         this.mouse = new THREE.Vector2(0, 0);
         this.prevMouse = new THREE.Vector2(0, 0);
         this.mouseVelocity = new THREE.Vector2(0, 0);
+        
+        // Check if on mobile device and disable interaction by default on mobile
+        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.disableMouseInteraction = this.isMobile; // Disabled by default on mobile
 
         // Main 3D model references
         this.model = null;
@@ -61,20 +70,22 @@ class BackgroundAnimation {
         this.breathingAmount = 0.1;
         this.breathingOffsets = [0, Math.PI * 2/3, Math.PI * 4/3];
 
-        // --- New: final text morphing ---
-        this.finalTextPositions = null;  // will hold positions for "ABOUT/CONTACT/PROJECTS"
-        this.reassembleProgress = 0;     // goes from 0..1 after scroll > 1.0
-        this.originalTextGeometry = null; // Store original merged geometry for resize handling
-        this.sampledTextPoints = null;    // Store sampled points for text
-        this.pointGroups = null;         // Store which points belong to which word
+        // --- Particle expansion effect ---
+        this.expansionProgress = 0;     // goes from 0..1 after scroll > 0.7
+        this.particleGrowthScale = 1.0; // particle size multiplier
+        this.particleExpansionOffsets = null; // Persistent random offsets for smooth expansion
+        
+        // Color adjustment parameters
+        this.colorParams = {
+            brightness: 1.0,
+            saturation: 1.0,
+            vibrance: 0.0,
+            contrast: 1.0,
+            whiteBalance: 0.0,
+            warmth: 0.0
+        };
 
-        // Text scatter animation properties
-        this.textScatterProgress = 0;
-        this.textScatterActive = false;
-        this.textScatterDirection = 'out'; // 'out' or 'in'
-        this.textScatterSpeed = 0.6; // Reduced from 15
-        this.textScatterVectors = null;
-        this.activeWindowId = null;
+        // Remove text scatter - no longer needed
 
         // Set up lights, camera, and initial positions
         this.calculateCameraPosition();
@@ -83,7 +94,8 @@ class BackgroundAnimation {
         this.camera.position.copy(this.initialCameraPosition);
         this.camera.lookAt(0, 0, 0);
 
-        // Lights
+        // Set up color editing GUI
+        this.setupColorGUI();
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
@@ -100,6 +112,9 @@ class BackgroundAnimation {
 
         // Basic event listeners (model rotation, scroll, resize)
         window.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('mouseleave', this.onMouseLeave.bind(this));
+        document.addEventListener('mouseleave', this.onMouseLeave.bind(this));
+        document.body.addEventListener('mouseleave', this.onMouseLeave.bind(this));
         window.addEventListener('touchmove', (e) => {
             if (this.scrollProgress < 0) return; // Don't interact before scroll
             
@@ -124,17 +139,31 @@ class BackgroundAnimation {
             this.prevMouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
             this.prevMouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
             
+            // Enable mouse interaction
+            this.disableMouseInteraction = false;
+            
             this.onMouseMove({
                 clientX: touch.clientX,
                 clientY: touch.clientY
             });
         });
+
+        // Add touchend event to completely disable the circle effect
+        window.addEventListener('touchend', () => {
+            // Disable mouse interaction completely
+            this.disableMouseInteraction = true;
+            
+            // Reset velocities
+            this.mouseVelocity.x = 0;
+            this.mouseVelocity.y = 0;
+            
+            // Reset target rotation to base rotation
+            this.targetRotation.x = this.baseRotation.x;
+            this.targetRotation.y = this.baseRotation.y;
+        });
+        
         window.addEventListener('resize', this.onWindowResize.bind(this));
         window.addEventListener('scroll', this.handleScroll.bind(this));
-
-        // Add click event listener for text interaction
-        this.renderer.domElement.addEventListener('click', this.onCanvasClick.bind(this));
-        this.raycaster = new THREE.Raycaster();
 
         // Start the main animation loop
         this.animate();
@@ -176,32 +205,223 @@ class BackgroundAnimation {
     }
 
     // --------------------------------------------------
+    //  COLOR EDITING GUI
+    // --------------------------------------------------
+    
+    setupColorGUI() {
+        if (typeof dat === 'undefined') {
+            console.warn('dat.GUI not loaded, color controls unavailable');
+            return;
+        }
+        
+        const gui = new dat.GUI();
+        gui.domElement.style.position = 'fixed';
+        gui.domElement.style.top = '80px';
+        gui.domElement.style.right = '20px';
+        gui.domElement.style.zIndex = '999999';
+        gui.domElement.style.pointerEvents = 'auto';
+        
+        // Ensure all child elements also have pointer events
+        const style = document.createElement('style');
+        style.textContent = `
+            .dg.ac { pointer-events: auto !important; z-index: 999999 !important; }
+            .dg.ac * { pointer-events: auto !important; }
+        `;
+        document.head.appendChild(style);
+        
+        const colorFolder = gui.addFolder('Flower Colors');
+        
+        colorFolder.add(this.colorParams, 'brightness', 0.1, 3.0).step(0.01).name('Brightness').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'saturation', 0.0, 3.0).step(0.01).name('Saturation').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'vibrance', -1.0, 3.0).step(0.01).name('Vibrance').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'contrast', 0.5, 2.0).step(0.01).name('Contrast').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'whiteBalance', -1.0, 1.0).step(0.01).name('White Balance').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.add(this.colorParams, 'warmth', -1.0, 1.0).step(0.01).name('Warmth').onChange(() => {
+            this.applyColorTransform();
+        });
+        
+        colorFolder.open();
+        
+        this.gui = gui;
+    }
+    
+    applyColorTransform() {
+        if (!this.baseColors || !this.model) return;
+        
+        const colors = this.model.geometry.attributes.color.array;
+        
+        for (let i = 0; i < this.baseColors.length; i += 3) {
+            // Get original RGB values from the unmodified backup
+            let r = this.baseColors[i];
+            let g = this.baseColors[i + 1];
+            let b = this.baseColors[i + 2];
+            
+            // Apply saturation
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            r = gray + (r - gray) * this.colorParams.saturation;
+            g = gray + (g - gray) * this.colorParams.saturation;
+            b = gray + (b - gray) * this.colorParams.saturation;
+            
+            // Apply vibrance (boosts muted colors more than saturated ones)
+            if (this.colorParams.vibrance !== 0) {
+                const max = Math.max(r, g, b);
+                const avg = (r + g + b) / 3;
+                const amt = ((Math.abs(max - avg) * 2 - 1) * this.colorParams.vibrance) * (1 - max);
+                r += (max - r) * amt;
+                g += (max - g) * amt;
+                b += (max - b) * amt;
+            }
+            
+            // Apply contrast
+            r = ((r - 0.5) * this.colorParams.contrast) + 0.5;
+            g = ((g - 0.5) * this.colorParams.contrast) + 0.5;
+            b = ((b - 0.5) * this.colorParams.contrast) + 0.5;
+            
+            // Apply white balance (shift color temperature)
+            if (this.colorParams.whiteBalance !== 0) {
+                if (this.colorParams.whiteBalance > 0) {
+                    // Warmer white balance: boost reds/yellows, reduce blues
+                    r += this.colorParams.whiteBalance * 0.15;
+                    g += this.colorParams.whiteBalance * 0.05;
+                    b -= this.colorParams.whiteBalance * 0.15;
+                } else {
+                    // Cooler white balance: boost blues, reduce reds/yellows
+                    const wb = Math.abs(this.colorParams.whiteBalance);
+                    b += wb * 0.15;
+                    g += wb * 0.02;
+                    r -= wb * 0.15;
+                }
+            }
+            
+            // Apply warmth (shift toward orange/blue)
+            if (this.colorParams.warmth !== 0) {
+                if (this.colorParams.warmth > 0) {
+                    // Warmer: add red, reduce blue
+                    r += this.colorParams.warmth * 0.1;
+                    b -= this.colorParams.warmth * 0.1;
+                } else {
+                    // Cooler: add blue, reduce red
+                    b += Math.abs(this.colorParams.warmth) * 0.1;
+                    r -= Math.abs(this.colorParams.warmth) * 0.1;
+                }
+            }
+            
+            // Apply brightness
+            r *= this.colorParams.brightness;
+            g *= this.colorParams.brightness;
+            b *= this.colorParams.brightness;
+            
+            // Clamp values
+            r = Math.max(0, Math.min(1, r));
+            g = Math.max(0, Math.min(1, g));
+            b = Math.max(0, Math.min(1, b));
+            
+            // Update both the geometry colors and originalColors (used by animations)
+            colors[i] = r;
+            colors[i + 1] = g;
+            colors[i + 2] = b;
+            
+            this.originalColors[i] = r;
+            this.originalColors[i + 1] = g;
+            this.originalColors[i + 2] = b;
+        }
+        
+        this.model.geometry.attributes.color.needsUpdate = true;
+    }
+    
+    // Helper functions for HSL conversion
+    rgbToHsl(r, g, b) {
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+        
+        if (max === min) {
+            h = s = 0;
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                case g: h = ((b - r) / d + 2) / 6; break;
+                case b: h = ((r - g) / d + 4) / 6; break;
+            }
+        }
+        return [h, s, l];
+    }
+    
+    hslToRgb(h, s, l) {
+        let r, g, b;
+        
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+        
+        return [r, g, b];
+    }
+
+    // --------------------------------------------------
     //  MOUSE & ROTATION
     // --------------------------------------------------
+
+    onMouseLeave(event) {
+        // Reset mouse position off-screen so push effect disappears
+        this.mouse.x = -9999;
+        this.mouse.y = -9999;
+    }
 
     onMouseMove(event) {
         // Convert mouse position to normalized device coordinates
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-        // Calculate velocity (push points away from the mouse if wanted)
+        // Calculate velocity
         this.mouseVelocity.x = this.mouse.x - this.prevMouse.x;
         this.mouseVelocity.y = this.mouse.y - this.prevMouse.y;
-        
-        // Detect if this is likely a touch event (smaller movements)
-        const isTouchEvent = 'ontouchstart' in window && Math.abs(this.mouseVelocity.x) + Math.abs(this.mouseVelocity.y) < 0.1;
-        
-        // Apply stronger smoothing for touch events
-        const smoothingFactor = isTouchEvent ? 0.05 : 0.1;
+        this.prevMouse.copy(this.mouse);
 
-        this.prevMouse.x = this.mouse.x;
-        this.prevMouse.y = this.mouse.y;
+        // Disable mouse rotation when particles are expanding
+        if (this.disableMouseInteraction || this.expansionProgress >= 0.1) {
+            return;
+        }
 
-        // Reduce tilt effect based on dissolve progress
-        const minTiltFactor = 0.05;
-        const tiltReduction =
-            minTiltFactor + ((1 - minTiltFactor) * (1 - (this.disperseProgress / 0.87)));
-        const tiltX = this.mouse.y * 0.5 * tiltReduction; // tilt around X-axis
+        // Reduce tilt effect based on disperse progress
+        const tiltReduction = 1 - (this.disperseProgress / 0.87);
+
+        // Use different smoothing for touch vs mouse
+        const smoothingFactor = this.isTouchDevice ? 0.03 : 0.08;
+
+        // Calculate tilt based on mouse position
+        const tiltX = -this.mouse.y * 0.3 * tiltReduction; // tilt around X-axis
         const tiltY = this.mouse.x * 0.5 * tiltReduction; // tilt around Y-axis
 
         // Update target rotation
@@ -213,7 +433,8 @@ class BackgroundAnimation {
         this.modelRotation.x += (this.targetRotation.x - this.modelRotation.x) * interpolationSpeed;
         this.modelRotation.y += (this.targetRotation.y - this.modelRotation.y) * interpolationSpeed;
 
-        if (this.model) {
+        // Only apply rotation if particles are not expanding
+        if (this.model && this.expansionProgress < 0.1) {
             this.model.rotation.x = this.modelRotation.x;
             this.model.rotation.y = this.modelRotation.y;
         }
@@ -223,7 +444,37 @@ class BackgroundAnimation {
     //  SCROLL LOGIC
     // --------------------------------------------------
 
+    setActive(isActive) {
+        this.isActive = isActive;
+        
+        // Clean up scroll effects when becoming inactive
+        if (!isActive) {
+            document.body.classList.remove('scrolled');
+            document.documentElement.classList.remove('scrolled');
+            
+            // Remove white overlay if it exists
+            if (this.whiteOverlay && this.whiteOverlay.parentNode) {
+                this.whiteOverlay.parentNode.removeChild(this.whiteOverlay);
+                this.whiteOverlay = null;
+            }
+            
+            // Reset scroll progress
+            this.scrollProgress = 0;
+            this.disperseProgress = 0;
+            this.expansionProgress = 0;
+            this.particleGrowthScale = 1.0;
+        } else {
+            // When becoming active again, trigger scroll handler to sync state
+            this.handleScroll();
+        }
+    }
+
     handleScroll() {
+        // Only handle scroll effects when active (on home page)
+        if (!this.isActive) {
+            return;
+        }
+
         const scrollPosition = window.pageYOffset;
         const heroHeight = window.innerHeight;
         const scrollProgress = scrollPosition / heroHeight;
@@ -232,40 +483,94 @@ class BackgroundAnimation {
         // Add/remove scrolled class to body for global state
         if (scrollProgress > 0.1) {
             document.body.classList.add('scrolled');
-            this.renderer.domElement.style.pointerEvents = 'auto';
+            document.documentElement.classList.add('scrolled');
+            
+            // Only enable pointer events on the canvas when we're in the text navigation area
+            // This allows clicking on social links when they're visible
+            if (scrollProgress > 0.7) {
+                this.renderer.domElement.style.pointerEvents = 'auto';
+            } else {
+                this.renderer.domElement.style.pointerEvents = 'none';
+            }
         } else {
             document.body.classList.remove('scrolled');
-            this.renderer.domElement.style.pointerEvents = 'auto';
+            document.documentElement.classList.remove('scrolled');
+            this.renderer.domElement.style.pointerEvents = 'none';
         }
 
-        // Text fade out (0-40% scroll)
-        const textProgress = Math.min(scrollProgress / 0.4, 1);
+        // Text fade out (0-20% scroll)
+        const textProgress = Math.min(scrollProgress / 0.2, 1);
         const heroContent = document.querySelector('.hero-content');
         if (heroContent) {
             heroContent.style.opacity = Math.max(0, 1 - textProgress * 1.2);
         }
 
-        // Zoom progress (40-70% => up to 0.3 max)
+        // Zoom progress (20-45% => up to 0.3 max)
         let zoomProgress = 0;
         const maxZoom = 0.3;
-        if (scrollProgress > 0.4) {
-            zoomProgress = Math.min((scrollProgress - 0.4) / 0.3, 1) * maxZoom;
+        if (scrollProgress > 0.2) {
+            zoomProgress = Math.min((scrollProgress - 0.2) / 0.25, 1) * maxZoom;
         }
 
-        // Dissolve progress (70-100% => up to 0.87)
+        // Dissolve progress (45-70% => up to 0.87)
         let dissolveProgress = 0;
-        if (scrollProgress > 0.7) {
-            dissolveProgress = Math.min((scrollProgress - 0.7) / 0.3, 1) * 0.87;
+        if (scrollProgress > 0.45) {
+            dissolveProgress = Math.min((scrollProgress - 0.45) / 0.25, 1) * 0.87;
         }
         this.disperseProgress = dissolveProgress;
 
-        // Text morphing progress (100-200%)
-        if (scrollProgress > 1.0) {
-            // from 1.0 to 2.0 => reassembleProgress: 0..1
-            const reassembleRange = 1.0; // 2.0 - 1.0
-            this.reassembleProgress = Math.min((scrollProgress - 1.0) / reassembleRange, 1);
+        // Particle expansion progress (50-100%) - starts earlier for slower growth feel
+        if (scrollProgress > 0.5) {
+            // from 0.5 to 1.0 => expansionProgress: 0..1
+            const expansionRange = 0.5; // 1.0 - 0.5
+            this.expansionProgress = Math.min((scrollProgress - 0.5) / expansionRange, 1);
+            
+            // Grow particles as they expand - large growth over longer scroll range
+            this.particleGrowthScale = 1.0 + (this.expansionProgress * 400); // Grow up to 401x size
+            
+            // Initialize persistent random offsets once
+            if (!this.particleExpansionOffsets && this.model) {
+                const positions = this.model.geometry.attributes.position.array;
+                this.particleExpansionOffsets = [];
+                for (let i = 0; i < positions.length / 3; i++) {
+                    this.particleExpansionOffsets.push({
+                        x: (Math.random() - 0.5) * 3.0,
+                        y: (Math.random() - 0.5) * 3.0
+                    });
+                }
+            }
+            
+            // Create white overlay if it doesn't exist
+            if (!this.whiteOverlay) {
+                this.whiteOverlay = document.createElement('div');
+                this.whiteOverlay.id = 'white-transition-overlay';
+                this.whiteOverlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: white;
+                    pointer-events: none;
+                    z-index: 0;
+                    opacity: 0;
+                `;
+                document.body.insertBefore(this.whiteOverlay, document.body.firstChild);
+            }
+            
+            // Fade overlay to white - synced with particle color transition
+            // Both particles and background fade to white at the same rate (first 50% of expansion)
+            const colorProgress = Math.min(this.expansionProgress * 2, 1);
+            this.whiteOverlay.style.opacity = colorProgress;
         } else {
-            this.reassembleProgress = 0;
+            this.expansionProgress = 0;
+            this.particleGrowthScale = 1.0;
+            this.particleExpansionOffsets = null;
+            
+            // Fade out overlay
+            if (this.whiteOverlay) {
+                this.whiteOverlay.style.opacity = 0;
+            }
         }
 
         // Interpolate camera position for the zoom
@@ -297,8 +602,8 @@ class BackgroundAnimation {
         // Optional swirl “intro” if still animating in
         this.updateIntroAnimation();
 
-        // Further smooth rotation if not fully dissolved
-        if (this.model && this.disperseProgress < 1) {
+        // Further smooth rotation if not fully dissolved and particles not expanding
+        if (this.model && this.disperseProgress < 1 && this.expansionProgress < 0.1) {
             this.modelRotation.x += (this.targetRotation.x - this.modelRotation.x) * 0.05;
             this.modelRotation.y += (this.targetRotation.y - this.modelRotation.y) * 0.05;
             this.model.rotation.set(
@@ -306,6 +611,19 @@ class BackgroundAnimation {
                 this.modelRotation.y,
                 this.modelRotation.z
             );
+        }
+        
+        // Update particle size and opacity based on expansion
+        if (this.model && this.model.material) {
+            this.model.material.size = this.particleSize * this.particleGrowthScale;
+            
+            // Fade out particles in second half of expansion (0.5-1.0)
+            if (this.expansionProgress > 0.5) {
+                const fadeT = (this.expansionProgress - 0.5) / 0.5; // 0..1
+                this.model.material.opacity = 1 - fadeT;
+            } else {
+                this.model.material.opacity = 1;
+            }
         }
 
         this.renderer.render(this.scene, this.camera);
@@ -324,72 +642,25 @@ class BackgroundAnimation {
         const fov = this.camera.fov * (Math.PI / 180);
         const scale = Math.abs(this.camera.position.z - this.modelPosition.z) * Math.tan(fov / 2) * 2;
 
-        // Get theme-based color
-        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
-        const themeColor = isDarkTheme ? { r: 1, g: 1, b: 1 } : { r: 0, g: 0, b: 0 };
-
         // Scale down the visual effect of dissolve
         const scaledDisperseProgress = this.disperseProgress * 0.17;
 
         // Disable breathing if fully dissolved
         const disableBreathing = this.disperseProgress >= 0.87;
 
-        // Update text scatter animation
-        if (this.textScatterActive) {
-            if (!this.textScatterVectors) {
-                this.initTextScatterVectors();
-            }
-            
-            if (this.textScatterDirection === 'out') {
-                this.textScatterProgress = Math.min(1, this.textScatterProgress + 0.015); // Reduced from 0.03
-                if (this.textScatterProgress >= 0.60) {
-                    if (this.activeWindowId) {
-                        this.showWindow(this.activeWindowId);
-                    }
-                }
-            } else {
-                this.textScatterProgress = Math.max(0, this.textScatterProgress - 0.015); // Reduced from 0.03
-                if (this.textScatterProgress <= 0) {
-                    this.textScatterActive = false;
-                }
-            }
-
-            // Apply scatter effect to all points when text is active
-            if (this.finalTextPositions && this.reassembleProgress >= 1) {
-                for (let i = 0; i < positions.length; i += 3) {
-                    const idx = i / 3;
-                    const scatterVector = this.textScatterVectors[idx];
-                    
-                    // Get the base text position
-                    const baseX = this.finalTextPositions[i];
-                    const baseY = this.finalTextPositions[i + 1];
-                    const baseZ = this.finalTextPositions[i + 2];
-
-                    // Apply scatter effect with easing
-                    const easeInOut = t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-                    const easedScatter = easeInOut(this.textScatterProgress);
-                    
-                    positions[i] = baseX + scatterVector.x * easedScatter * this.textScatterSpeed;
-                    positions[i + 1] = baseY + scatterVector.y * easedScatter * this.textScatterSpeed;
-                    positions[i + 2] = baseZ + scatterVector.z * easedScatter * this.textScatterSpeed;
-                }
-                this.model.geometry.attributes.position.needsUpdate = true;
-                return; // Skip other position updates when scattering
-            }
-        }
-
-        // Regular point updates (only if not scattering)
+        // Regular point updates
         for (let i = 0; i < positions.length; i += 3) {
             const idx = i / 3;
             
-            // Color transition for text reassembly
-            if (this.finalTextPositions && this.reassembleProgress > 0) {
-                const t = this.reassembleProgress;
-                const colorIdx = i;
+            // Color transition: turn white as particles expand, then fade out
+            if (this.expansionProgress > 0) {
+                const t = this.expansionProgress;
                 
-                colors[colorIdx] = this.originalColors[colorIdx] * (1 - t) + themeColor.r * t;
-                colors[colorIdx + 1] = this.originalColors[colorIdx + 1] * (1 - t) + themeColor.g * t;
-                colors[colorIdx + 2] = this.originalColors[colorIdx + 2] * (1 - t) + themeColor.b * t;
+                // Turn white in first half (0-0.5)
+                const colorT = Math.min(t * 2, 1);
+                colors[i] = this.originalColors[i] * (1 - colorT) + 1.0 * colorT;
+                colors[i + 1] = this.originalColors[i + 1] * (1 - colorT) + 1.0 * colorT;
+                colors[i + 2] = this.originalColors[i + 2] * (1 - colorT) + 1.0 * colorT;
             } else {
                 colors[i] = this.originalColors[i];
                 colors[i + 1] = this.originalColors[i + 1];
@@ -403,9 +674,9 @@ class BackgroundAnimation {
             const dy = screenY - this.mouse.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Gentle push radius
+            // Gentle push radius - only if mouse interaction is enabled
             const radius = 0.4;
-            if (distance < radius) {
+            if (!this.disableMouseInteraction && distance < radius) {
                 const t = distance / radius;
                 const smoothForce = 1 - (t * t * (3 - 2 * t));
                 const force = smoothForce * 0.1;
@@ -450,32 +721,44 @@ class BackgroundAnimation {
             }
         }
 
-        // --- NEW: reassembly into "ABOUT CONTACT PROJECTS" ---
-        if (this.finalTextPositions && this.reassembleProgress > 0) {
-            const t = this.reassembleProgress; // 0..1
+        // --- NEW: Particle expansion to fill screen ---
+        if (this.expansionProgress > 0) {
+            const t = this.expansionProgress; // 0..1
+            
+            // Calculate viewport dimensions in world space
+            const distance = Math.abs(this.camera.position.z);
+            const vFOV = this.camera.fov * Math.PI / 180;
+            const viewportHeight = 2 * Math.tan(vFOV / 2) * distance;
+            const viewportWidth = viewportHeight * this.camera.aspect;
+            
             for (let i = 0; i < positions.length; i += 3) {
-                const dispersedX = positions[i];
-                const dispersedY = positions[i + 1];
-                const dispersedZ = positions[i + 2];
-
-                const targetX = this.finalTextPositions[i];
-                const targetY = this.finalTextPositions[i + 1];
-                const targetZ = this.finalTextPositions[i + 2];
+                const idx = i / 3;
                 
-                // Check if this is an off-screen point (points that were positioned far away)
-                const isOffscreenPoint = Math.abs(targetX) > 500 || Math.abs(targetY) > 500 || targetZ < -500;
+                // Get current dispersed position
+                const currentX = positions[i];
+                const currentY = positions[i + 1];
+                const currentZ = positions[i + 2];
                 
-                if (isOffscreenPoint) {
-                    // Keep offscreen points far away
-                    positions[i] = targetX;
-                    positions[i+1] = targetY;
-                    positions[i+2] = targetZ;
-                } else {
-                    // Normal interpolation for visible points
-                    positions[i]   = dispersedX + (targetX - dispersedX) * t;
-                    positions[i+1] = dispersedY + (targetY - dispersedY) * t;
-                    positions[i+2] = dispersedZ + (targetZ - dispersedZ) * t;
-                }
+                // Calculate expansion target - spread particles to fill viewport
+                // Use particle's current position to determine expansion direction
+                const normalizedX = currentX / (viewportWidth * 0.5);
+                const normalizedY = currentY / (viewportHeight * 0.5);
+                
+                // Expand outward from center, completely filling the screen
+                const expansionScale = 1 + (t * 15); // Expand up to 16x viewport size
+                
+                // Use persistent random offsets to prevent shakiness
+                const offset = this.particleExpansionOffsets ? this.particleExpansionOffsets[idx] : { x: 0, y: 0 };
+                
+                const targetX = (normalizedX * viewportWidth * 0.5 * expansionScale) + (offset.x * t);
+                const targetY = (normalizedY * viewportHeight * 0.5 * expansionScale) + (offset.y * t);
+                const targetZ = currentZ - (t * 10); // Move very close to camera
+                
+                // Smooth interpolation to expansion target
+                const easeOut = 1 - Math.pow(1 - t, 3); // Cubic ease-out
+                positions[i] = currentX + (targetX - currentX) * easeOut;
+                positions[i + 1] = currentY + (targetY - currentY) * easeOut;
+                positions[i + 2] = currentZ + (targetZ - currentZ) * easeOut;
             }
         }
 
@@ -642,8 +925,11 @@ class BackgroundAnimation {
                 this.currentPositions = new Float32Array(this.originalPositions);
                 this.velocities = new Float32Array(this.originalPositions.length);
                 
-                // Store original colors
+                // Store original colors (this gets modified by animations)
                 this.originalColors = new Float32Array(bufferGeometry.attributes.color.array);
+                
+                // Store a backup copy that NEVER gets modified (for color transformations)
+                this.baseColors = new Float32Array(bufferGeometry.attributes.color.array);
 
                 const material = new THREE.PointsMaterial({
                     size: this.particleSize,
@@ -678,14 +964,19 @@ class BackgroundAnimation {
                 // Add the model to the scene
                 this.scene.add(this.model);
 
-                // Load text positions after model is loaded
-                this.loadTextPositions();
+                // Text positions no longer needed - using particle expansion instead
+                // this.loadTextPositions();
+                
+                // Signal that loading is complete
+                this.onModelLoaded();
             },
             (xhr) => {
                 console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
             },
             (error) => {
-                console.error('Error loading PLY:', error);
+                console.error('Error loading PLY model:', error);
+                // Even if there's an error, remove the loading screen
+                this.onModelLoaded();
             }
         );
     }
@@ -703,7 +994,7 @@ class BackgroundAnimation {
                 // Create text geometries
                 const font = loadedGeometries[0];
                 const textGeometries = [];
-                const words = ['ABOUT', 'CLIENTS', 'CONTACT'];
+                const words = ['ABOUT', 'PORTFOLIO', 'CONTACT'];
                 const yPositions = [5, 0, -5];  // Vertical spacing between words
 
                 words.forEach((text, index) => {
@@ -714,7 +1005,7 @@ class BackgroundAnimation {
                 });
 
                 const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(textGeometries);
-                mergedGeometry.translate(0, 0, 5);
+                mergedGeometry.translate(0, 0, 0);
                 
                 // Store original merged geometry for resize handling
                 this.originalTextGeometry = mergedGeometry.clone();
@@ -767,6 +1058,27 @@ class BackgroundAnimation {
         );
     }
 
+    onModelLoaded() {
+        // Remove loading class from body to show content
+        document.body.classList.remove('loading');
+        
+        // Hide the loading screen
+        const loadingScreen = document.querySelector('.loading-screen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+            
+            // Remove from DOM after transition completes
+            setTimeout(() => {
+                loadingScreen.remove();
+            }, 500);
+        }
+        
+        // Call the React callback if provided
+        if (this.onLoadCallback) {
+            this.onLoadCallback();
+        }
+    }
+
     sampleGeometryPointsWithGroups(geometries, totalCount) {
         const points = new Float32Array(totalCount * 3);
         const groups = new Array(totalCount);
@@ -797,7 +1109,7 @@ class BackgroundAnimation {
 
         config.worldScale = worldScale;
         config.verticalSpacing = 5;
-        config.zPosition = 5;
+        config.zPosition = 0;
         
         geometries.forEach((geometry, groupIndex) => {
             const canvas = document.createElement('canvas');
@@ -810,12 +1122,13 @@ class BackgroundAnimation {
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'white';
-            ctx.font = `bold ${config.fontSize}px Arial`;  
+            //Change font particle font
+            ctx.font = `bold ${config.fontSize}px 'Italiana', serif`;  
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
             // Draw the text
-            const text = ['ABOUT', 'SERVICES', 'CONTACT'][groupIndex];
+            const text = ['ABOUT', 'PORTFOLIO', 'CONTACT'][groupIndex];
             ctx.fillText(text, canvas.width / 2, canvas.height / 2);
             
             // Get pixel data
@@ -1123,27 +1436,43 @@ class BackgroundAnimation {
 
     preventBackgroundScroll(e) {
         if (document.body.classList.contains('window-open')) {
-            // Check if the event originated from a content window
+            // Check if the event originated from a content window or portfolio lightbox
             const path = e.composedPath ? e.composedPath() : e.path;
             const isFromWindow = path.some(el => el.classList && 
                 (el.classList.contains('content-window') || 
                  el.classList.contains('window-content') || 
-                 el.classList.contains('window-container')));
+                 el.classList.contains('window-container') ||
+                 el.classList.contains('portfolio-lightbox') ||
+                 el.classList.contains('lightbox-container')));
             
-            // Only prevent default if the event is NOT from a content window
+            // Only prevent default if the event is NOT from a content window or lightbox
             if (!isFromWindow) {
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }
-            // Allow scrolling if event originated from content window
+            // Allow scrolling if event originated from content window or lightbox
             return true;
         }
     }
 
     showWindow(windowId) {
         const window = document.getElementById(windowId);
+        
+        // Safety check: windows no longer exist in multi-page architecture
+        if (!window) {
+            // Clear activeWindowId to prevent repeated attempts
+            this.activeWindowId = null;
+            return;
+        }
+        
         window.style.display = 'block';
+        
+        // Initialize portfolio gallery if services window is opened
+        if (windowId === 'services-window' && typeof window.initPortfolioGallery === 'function') {
+            console.log('🎨 Services window opened, initializing portfolio gallery...');
+            window.initPortfolioGallery();
+        }
         
         // Hide point cloud
         if (this.model) {
@@ -1172,6 +1501,116 @@ class BackgroundAnimation {
             el.style.overflowY = 'auto';
             el.style.webkitOverflowScrolling = 'touch';
         });
+        
+        // Initialize header fade effect for this window
+        const headerFadeHandler = function() {
+            const header = this.querySelector('.window-header');
+            if (header) {
+                if (this.scrollTop > 50) {
+                    header.classList.add('fade-out');
+                } else {
+                    header.classList.remove('fade-out');
+                }
+            }
+        };
+        
+        window.addEventListener('scroll', headerFadeHandler);
+        
+        // Add mouse position detection for header visibility
+        window.addEventListener('mousemove', function(e) {
+            const header = this.querySelector('.window-header');
+            if (header && header.classList.contains('fade-out')) {
+                // If mouse is near the top of the window, show the header
+                if (e.clientY < 100) {
+                    header.classList.add('hover-visible');
+                } else {
+                    header.classList.remove('hover-visible');
+                }
+            }
+        });
+        
+        // Trigger initial check
+        window.dispatchEvent(new Event('scroll'));
+    }
+
+    // Add method to initialize close buttons
+    initializeCloseButtons() {
+        const windows = ['about-window', 'services-window', 'contact-window'];
+        windows.forEach(windowId => {
+            const windowElement = document.getElementById(windowId);
+            if (windowElement) {
+                const closeBtn = windowElement.querySelector('.close-btn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        // Start scatter-in animation
+                        this.textScatterActive = true;
+                        this.textScatterDirection = 'in';
+                        this.textScatterProgress = 1;
+                        
+                        // Reset rotation to base rotation to ensure text is facing forward
+                        if (this.model) {
+                            this.targetRotation.copy(this.baseRotation);
+                            this.modelRotation.copy(this.baseRotation);
+                            this.model.rotation.set(
+                                this.baseRotation.x,
+                                this.baseRotation.y,
+                                this.baseRotation.z
+                            );
+                        }
+                        
+                        // Hide the window immediately
+                        windowElement.style.display = 'none';
+                        this.activeWindowId = null;
+                    });
+                }
+            }
+        });
+    }
+
+    // Update window display methods
+    closeWindow(windowId) {
+        const window = document.getElementById(windowId);
+        window.classList.remove('visible');
+        document.body.classList.remove('window-open');
+        document.documentElement.classList.remove('window-open');
+        
+        // Show point cloud
+        if (this.model) {
+            this.model.visible = true;
+            
+            // Reset rotation to base rotation to ensure text is facing forward
+            this.targetRotation.copy(this.baseRotation);
+            this.modelRotation.copy(this.baseRotation);
+            this.model.rotation.set(
+                this.baseRotation.x,
+                this.baseRotation.y,
+                this.baseRotation.z
+            );
+        }
+
+        // Reset pointer events based on current scroll position
+        if (this.scrollProgress > 0.7) {
+            this.renderer.domElement.style.pointerEvents = 'auto';
+        } else {
+            this.renderer.domElement.style.pointerEvents = 'none';
+        }
+
+        // Remove global scroll prevention
+        document.removeEventListener('wheel', this.windowScrollHandler);
+        document.removeEventListener('touchmove', this.windowScrollHandler);
+        
+        // Start scatter-in animation
+        this.textScatterActive = true;
+        this.textScatterDirection = 'in';
+        
+        // Wait for fade out before hiding
+        setTimeout(() => {
+            window.style.display = 'none';
+            // Set scroll to bottom without animation
+            document.documentElement.style.scrollBehavior = 'auto';
+            document.documentElement.scrollTop = document.documentElement.scrollHeight;
+            document.documentElement.style.scrollBehavior = '';
+        }, 500); // Match the CSS transition duration
     }
 
     // Add method for handling text clicks
@@ -1201,81 +1640,32 @@ class BackgroundAnimation {
                 this.initTextScatterVectors();
             }
             
-            // Start scatter animation and set the window to open
+            // Start scatter animation
             this.textScatterActive = true;
             this.textScatterDirection = 'out';
             this.textScatterProgress = 0;
             
-            // Store the window ID to open after animation
+            // Determine which page to navigate to after animation
+            let targetPage = '';
             switch(groupIndex) {
                 case 0:
-                    this.activeWindowId = 'about-window';
+                    targetPage = 'about.html';
                     break;
                 case 1:
-                    this.activeWindowId = 'services-window';
+                    targetPage = 'portfolio.html';
                     break;
                 case 2:
-                    this.activeWindowId = 'contact-window';
+                    targetPage = 'contact.html';
                     break;
             }
+            
+            // Navigate after scatter animation completes (about 1 second)
+            setTimeout(() => {
+                window.location.href = targetPage;
+            }, 1000);
         }
-    }
-
-    // Add method to initialize close buttons
-    initializeCloseButtons() {
-        const windows = ['about-window', 'services-window', 'contact-window'];
-        windows.forEach(windowId => {
-            const windowElement = document.getElementById(windowId);
-            if (windowElement) {
-                const closeBtn = windowElement.querySelector('.close-btn');
-                if (closeBtn) {
-                    closeBtn.addEventListener('click', () => {
-                        // Start scatter-in animation
-                        this.textScatterActive = true;
-                        this.textScatterDirection = 'in';
-                        this.textScatterProgress = 1;
-                        
-                        // Hide the window immediately
-                        windowElement.style.display = 'none';
-                        this.activeWindowId = null;
-                    });
-                }
-            }
-        });
-    }
-
-    // Update window display methods
-    closeWindow(windowId) {
-        const window = document.getElementById(windowId);
-        window.classList.remove('visible');
-        document.body.classList.remove('window-open');
-        document.documentElement.classList.remove('window-open');
-        
-        // Show point cloud
-        if (this.model) {
-            this.model.visible = true;
-        }
-
-        // Remove global scroll prevention
-        document.removeEventListener('wheel', this.windowScrollHandler);
-        document.removeEventListener('touchmove', this.windowScrollHandler);
-        
-        // Start scatter-in animation
-        this.textScatterActive = true;
-        this.textScatterDirection = 'in';
-        
-        // Wait for fade out before hiding
-        setTimeout(() => {
-            window.style.display = 'none';
-            // Set scroll to bottom without animation
-            document.documentElement.style.scrollBehavior = 'auto';
-            document.documentElement.scrollTop = document.documentElement.scrollHeight;
-            document.documentElement.style.scrollBehavior = '';
-        }, 500); // Match the CSS transition duration
     }
 }
 
-// Init once DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    new BackgroundAnimation();
-});
+// Export class to window for React integration
+window.BackgroundAnimation = BackgroundAnimation;

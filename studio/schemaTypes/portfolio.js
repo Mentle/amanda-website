@@ -179,6 +179,23 @@ export default {
             accept: 'video/*'
           },
           hidden: ({parent}) => parent?.mediaType !== 'video'
+        },
+        {
+          name: 'videoThumbnail',
+          title: 'Video Thumbnail (Required for fast loading)',
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+          description: 'Upload a thumbnail image for the video - this will be shown in the portfolio grid for fast loading',
+          hidden: ({parent}) => parent?.mediaType !== 'video',
+          validation: Rule => Rule.custom((thumbnail, context) => {
+            const parent = context.parent;
+            if (parent?.mediaType === 'video' && !thumbnail) {
+              return 'Video thumbnail is required for fast portfolio loading';
+            }
+            return true;
+          })
         }
       ],
       validation: Rule => Rule.required()

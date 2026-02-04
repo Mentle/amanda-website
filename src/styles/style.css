@@ -43,7 +43,7 @@
 }
 
 body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Cooper Hewitt', sans-serif;
     color: var(--text-color);
     background: linear-gradient(
         to bottom, 
@@ -59,8 +59,8 @@ body {
 }
 
 h1, h2, h3 {
-    font-family: 'Italiana', serif;
-    font-weight: normal;
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 700;
 }
 
 /* Background Canvas */
@@ -122,7 +122,8 @@ body.scrolled #background-canvas {
 }
 
 .logo {
-    font-family: 'Italiana', serif;
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 700;
     text-decoration: none;
     font-size: 24px;
     color: var(--text-color);
@@ -198,8 +199,8 @@ section {
     left: 5vw;
     max-width: min(400px, 30vw);
     color: var(--text-color);
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 300;
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 400;
     line-height: 1.6;
     opacity: 1;
     transition: opacity 0.5s ease, color 0.3s ease;
@@ -226,8 +227,8 @@ section {
     transform: translateX(-50%);
     color: var(--text-color);
     text-align: center;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 300;
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 400;
     opacity: 1;
     transition: opacity 0.5s ease, color 0.3s ease;
     z-index: 3;
@@ -278,7 +279,8 @@ main {
 
 /* Hero Content */
 .main-title {
-    font-family: 'Italiana', serif;
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 700;
     font-size: 4rem;
     margin-bottom: 1rem;
     letter-spacing: 0.2em;
@@ -938,7 +940,8 @@ body.window-open {
 .content-window h2 {
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
-    font-family: 'Italiana', serif;
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 700;
 }
 
 .content-window p {
@@ -1249,7 +1252,8 @@ body.scrolled .social-links {
 }
 
 .contact-info .contact-message {
-    font-family: 'Italiana', serif;
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 700;
     font-size: 1.3rem;
     line-height: 1.6;
     max-width: 600px;
@@ -1349,7 +1353,8 @@ html {
     margin: 0;
     position: relative;
     display: inline-block;
-    font-family: 'Italiana', serif; /* Match the main logo font */
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 700;
     letter-spacing: 2px;
 }
 
@@ -2419,12 +2424,16 @@ body.window-open .scroll-indicator {
     transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
 }
 
-.loading-logo {
-    font-family: 'Italiana', serif;
-    font-size: 2rem;
+.loading-word {
+    font-family: 'Cooper Hewitt', sans-serif;
+    font-weight: 700;
+    font-size: 2.5rem;
     margin-bottom: 2rem;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     color: var(--text-color);
+    transition: opacity 0.2s ease-in-out;
+    font-weight: 400;
+    text-transform: uppercase;
 }
 
 .loading-spinner {
