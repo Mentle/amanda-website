@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import LoadingScreen from './components/LoadingScreen'
 import Background from './components/Background'
 import PillNav from './components/PillNav'
+import PasswordGate from './components/PasswordGate'
 import Home from './pages/Home'
 import About from './pages/About'
 import Portfolio from './pages/Portfolio'
@@ -65,31 +66,33 @@ function App() {
   }
 
   return (
-    <div className={isLoading ? 'loading' : ''}>
-      <LoadingScreen style={{ display: showLoadingScreen ? 'flex' : 'none' }} />
-      <div className="vignette-container" style={{ display: isHomePage ? 'block' : 'none' }}></div>
-      <div style={{ display: isHomePage ? 'block' : 'none' }}>
-        <Background onLoadComplete={handleLoadComplete} isActive={isHomePage} />
+    <PasswordGate>
+      <div className={isLoading ? 'loading' : ''}>
+        <LoadingScreen style={{ display: showLoadingScreen ? 'flex' : 'none' }} />
+        <div className="vignette-container" style={{ display: isHomePage ? 'block' : 'none' }}></div>
+        <div style={{ display: isHomePage ? 'block' : 'none' }}>
+          <Background onLoadComplete={handleLoadComplete} isActive={isHomePage} />
+        </div>
+        <PillNav
+          logo={<span style={{ fontSize: '0.6rem', letterSpacing: '0.5px' }}>AM</span>}
+          logoAlt="Amanda Michelena"
+          items={menuItems}
+          activeHref={location.pathname}
+          baseColor="#000000"
+          pillColor="#ffffff"
+          hoveredPillTextColor="#ffffff"
+          pillTextColor="#000000"
+          initialLoadAnimation={false}
+        />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/portfolio/:slug" element={<PortfolioDetail />} />
+          <Route path="/contact" element={<Contact />} />
+        </Routes>
       </div>
-      <PillNav
-        logo={<span style={{ fontSize: '0.6rem', letterSpacing: '0.5px' }}>AM</span>}
-        logoAlt="Amanda Michelena"
-        items={menuItems}
-        activeHref={location.pathname}
-        baseColor="#000000"
-        pillColor="#ffffff"
-        hoveredPillTextColor="#ffffff"
-        pillTextColor="#000000"
-        initialLoadAnimation={false}
-      />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/portfolio/:slug" element={<PortfolioDetail />} />
-        <Route path="/contact" element={<Contact />} />
-      </Routes>
-    </div>
+    </PasswordGate>
   )
 }
 
