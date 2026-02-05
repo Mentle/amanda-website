@@ -597,6 +597,8 @@ class InfiniteGridMenu {
   scaleFactor = 1.0;
   movementActive = false;
   activeItemIndex = -1;
+  formationProgress = 1.0; // 0 = scattered, 1 = formed sphere
+  scatteredPositions = []; // Random initial positions for fly-in effect
 
   constructor(canvas, items, onActiveItemChange, onMovementChange, onInit = null, scale = 1.0) {
     this.canvas = canvas;
@@ -633,7 +635,7 @@ class InfiniteGridMenu {
   }
 
   #init(onInit) {
-    this.gl = this.canvas.getContext('webgl2', { antialias: true, alpha: false });
+    this.gl = this.canvas.getContext('webgl2', { antialias: true, alpha: true });
     const gl = this.gl;
     if (!gl) {
       throw new Error('No WebGL 2 context!');
@@ -681,6 +683,7 @@ class InfiniteGridMenu {
     this.instancePositions = this.icoGeo.vertices.map(v => v.position);
     this.DISC_INSTANCE_COUNT = this.icoGeo.vertices.length;
     this.#initDiscInstances(this.DISC_INSTANCE_COUNT);
+    this.#initScatteredPositions();
 
     this.worldMatrix = mat4.create();
     this.#initTexture();
@@ -701,15 +704,13 @@ class InfiniteGridMenu {
     const itemCount = Math.max(1, this.items.length);
     this.atlasSize = Math.ceil(Math.sqrt(itemCount));
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true, willReadFrequently: true });
     const cellSize = 256; // Optimized for fastest loading
 
     canvas.width = this.atlasSize * cellSize;
     canvas.height = this.atlasSize * cellSize;
 
-    // Fill with dark background immediately
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Leave transparent - no background fill
 
     // Upload initial texture immediately so sphere appears
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
@@ -726,9 +727,7 @@ class InfiniteGridMenu {
         img.crossOrigin = 'anonymous';
         
         const timeout = setTimeout(() => {
-          // Timeout - use placeholder
-          ctx.fillStyle = '#2a2a2a';
-          ctx.fillRect(x, y, cellSize, cellSize);
+          // Timeout - leave transparent, no placeholder
           gl.bindTexture(gl.TEXTURE_2D, this.tex);
           gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, cellSize, cellSize, gl.RGBA, gl.UNSIGNED_BYTE, 
             ctx.getImageData(x, y, cellSize, cellSize));
@@ -747,8 +746,7 @@ class InfiniteGridMenu {
         
         img.onerror = () => {
           clearTimeout(timeout);
-          ctx.fillStyle = '#2a2a2a';
-          ctx.fillRect(x, y, cellSize, cellSize);
+          // Leave transparent on error, no placeholder
           gl.bindTexture(gl.TEXTURE_2D, this.tex);
           gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, cellSize, cellSize, gl.RGBA, gl.UNSIGNED_BYTE, 
             ctx.getImageData(x, y, cellSize, cellSize));
@@ -788,16 +786,58 @@ class InfiniteGridMenu {
     gl.bindVertexArray(null);
   }
 
+  #initScatteredPositions() {
+    // Generate random scattered positions for each disc (fly-in starting points)
+    this.scatteredPositions = this.instancePositions.map(() => {
+      // Random position in a larger sphere around the center
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const radius = this.SPHERE_RADIUS * (3 + Math.random() * 4); // 3-7x sphere radius
+      return vec3.fromValues(
+        radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.sin(phi) * Math.sin(theta),
+        radius * Math.cos(phi)
+      );
+    });
+  }
+
+  setFormationProgress(progress) {
+    this.formationProgress = Math.max(0, Math.min(1, progress));
+  }
+
+  #easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
   #animate(deltaTime) {
     const gl = this.gl;
     this.control.update(deltaTime, this.TARGET_FRAME_DURATION);
 
-    let positions = this.instancePositions.map(p => vec3.transformQuat(vec3.create(), p, this.control.orientation));
+    // Get sphere positions (final positions)
+    let spherePositions = this.instancePositions.map(p => vec3.transformQuat(vec3.create(), p, this.control.orientation));
+    
+    // Interpolate between scattered and sphere positions based on formationProgress
+    const easeProgress = this.#easeOutCubic(this.formationProgress);
+    let positions = spherePositions.map((spherePos, ndx) => {
+      if (this.formationProgress >= 1) return spherePos;
+      if (this.formationProgress <= 0) return this.scatteredPositions[ndx];
+      
+      // Lerp between scattered and sphere position
+      const scattered = this.scatteredPositions[ndx];
+      return vec3.fromValues(
+        scattered[0] + (spherePos[0] - scattered[0]) * easeProgress,
+        scattered[1] + (spherePos[1] - scattered[1]) * easeProgress,
+        scattered[2] + (spherePos[2] - scattered[2]) * easeProgress
+      );
+    });
+    
     const scale = 0.15;
     const SCALE_INTENSITY = 0.6;
     positions.forEach((p, ndx) => {
-      const s = (Math.abs(p[2]) / this.SPHERE_RADIUS) * SCALE_INTENSITY + (1 - SCALE_INTENSITY);
-      let finalScale = s * scale;
+      // Use sphere position for scale calculation to keep consistent sizing
+      const sphereP = spherePositions[ndx];
+      const s = (Math.abs(sphereP[2]) / this.SPHERE_RADIUS) * SCALE_INTENSITY + (1 - SCALE_INTENSITY);
+      let finalScale = s * scale * easeProgress; // Scale also grows with formation
       
       // Scale up the active item
       if (ndx === this.activeItemIndex) {
@@ -826,6 +866,8 @@ class InfiniteGridMenu {
 
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -950,23 +992,23 @@ const defaultItems = [
   }
 ];
 
-export default function InfiniteMenu({ items = [], scale = 1.0 }) {
+export default function InfiniteMenu({ items = [], scale = 1.0, formationProgress = 1.0 }) {
   const canvasRef = useRef(null);
+  const sketchRef = useRef(null);
   const [activeItem, setActiveItem] = useState(null);
   const [isMoving, setIsMoving] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    let sketch;
 
     const handleActiveItem = index => {
       const itemIndex = index % items.length;
       setActiveItem(items[itemIndex]);
     };
 
-    if (canvas) {
-      sketch = new InfiniteGridMenu(
+    if (canvas && !sketchRef.current) {
+      sketchRef.current = new InfiniteGridMenu(
         canvas,
         items.length ? items : defaultItems,
         handleActiveItem,
@@ -977,8 +1019,8 @@ export default function InfiniteMenu({ items = [], scale = 1.0 }) {
     }
 
     const handleResize = () => {
-      if (sketch) {
-        sketch.resize();
+      if (sketchRef.current) {
+        sketchRef.current.resize();
       }
     };
 
@@ -989,6 +1031,13 @@ export default function InfiniteMenu({ items = [], scale = 1.0 }) {
       window.removeEventListener('resize', handleResize);
     };
   }, [items, scale]);
+
+  // Update formation progress when prop changes
+  useEffect(() => {
+    if (sketchRef.current) {
+      sketchRef.current.setFormationProgress(formationProgress);
+    }
+  }, [formationProgress]);
 
   const handleButtonClick = () => {
     if (!activeItem?.link) return;

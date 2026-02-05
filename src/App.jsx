@@ -6,14 +6,12 @@ import PillNav from './components/PillNav'
 import PasswordGate from './components/PasswordGate'
 import Home from './pages/Home'
 import About from './pages/About'
-import Portfolio from './pages/Portfolio'
 import PortfolioDetail from './pages/PortfolioDetail'
 import Contact from './pages/Contact'
 
 const menuItems = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
-  { label: 'Portfolio', href: '/portfolio' },
   { label: 'Contact', href: '/contact' }
 ]
 
@@ -87,7 +85,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-          <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/portfolio/:slug" element={<PortfolioDetail />} />
           <Route path="/contact" element={<Contact />} />
         </Routes>

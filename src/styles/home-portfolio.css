@@ -1,0 +1,30 @@
+/* Portfolio section integrated into Home page */
+.portfolio-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: transparent;
+  z-index: 5;
+  padding: 0;
+}
+
+/* Adjust filter positioning for home page integration */
+.portfolio-section .portfolio-filters {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+@media (max-width: 768px) {
+  .portfolio-section {
+    padding-top: 60px;
+  }
+  
+  .portfolio-section .portfolio-filters {
+    top: 70px;
+  }
+}

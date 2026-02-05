@@ -15,9 +15,9 @@
     --scrollbar-width: 8px;
     --scrollbar-track: rgba(255, 255, 255, 0.1);
     --scrollbar-thumb: rgba(255, 255, 255, 0.2);
-    --gradient-top: #352735;
-    --gradient-middle: #5a5863;
-    --gradient-bottom: #7f8092;
+    --gradient-top: #FDFDFD;
+    --gradient-middle: #FDFDFD;
+    --gradient-bottom: #FDFDFD;
 }
 
 * {
@@ -198,7 +198,7 @@ section {
     top: 10vh;
     left: 5vw;
     max-width: min(400px, 30vw);
-    color: var(--text-color);
+    color: #1F1F1F;
     font-family: 'Cooper Hewitt', sans-serif;
     font-weight: 400;
     line-height: 1.6;
@@ -225,7 +225,7 @@ section {
     bottom: 10vh;
     left: 50%;
     transform: translateX(-50%);
-    color: var(--text-color);
+    color: #1F1F1F;
     text-align: center;
     font-family: 'Cooper Hewitt', sans-serif;
     font-weight: 400;
@@ -265,7 +265,7 @@ section {
 }
 
 .scroll-spacer {
-    height: 200vh; /* Reduced to match compressed scroll animation */
+    height: 155vh; /* Allows scroll to ~55% - extra room for white transition */
 }
 
 /* Main content */

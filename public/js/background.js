@@ -71,7 +71,8 @@ class BackgroundAnimation {
         this.breathingOffsets = [0, Math.PI * 2/3, Math.PI * 4/3];
 
         // --- Particle expansion effect ---
-        this.expansionProgress = 0;     // goes from 0..1 after scroll > 0.7
+        this.expansionProgress = 0;     // goes from 0..1 after scroll > 0.5 (50-100%)
+        this.colorProgress = 0;         // goes from 0..1 after scroll > 0.5 (50-53% for white transition)
         this.particleGrowthScale = 1.0; // particle size multiplier
         this.particleExpansionOffsets = null; // Persistent random offsets for smooth expansion
         
@@ -462,6 +463,7 @@ class BackgroundAnimation {
             this.scrollProgress = 0;
             this.disperseProgress = 0;
             this.expansionProgress = 0;
+            this.colorProgress = 0;
             this.particleGrowthScale = 1.0;
         } else {
             // When becoming active again, trigger scroll handler to sync state
@@ -519,7 +521,7 @@ class BackgroundAnimation {
         }
         this.disperseProgress = dissolveProgress;
 
-        // Particle expansion progress (50-100%) - starts earlier for slower growth feel
+        // Particle expansion progress (50-100%) - original range for particle growth
         if (scrollProgress > 0.5) {
             // from 0.5 to 1.0 => expansionProgress: 0..1
             const expansionRange = 0.5; // 1.0 - 0.5
@@ -550,20 +552,20 @@ class BackgroundAnimation {
                     left: 0;
                     width: 100%;
                     height: 100%;
-                    background: white;
+                    background: #FDFDFD;
                     pointer-events: none;
-                    z-index: 0;
+                    z-index: 3;
                     opacity: 0;
                 `;
                 document.body.insertBefore(this.whiteOverlay, document.body.firstChild);
             }
             
-            // Fade overlay to white - synced with particle color transition
-            // Both particles and background fade to white at the same rate (first 50% of expansion)
-            const colorProgress = Math.min(this.expansionProgress * 2, 1);
-            this.whiteOverlay.style.opacity = colorProgress;
+            // Color transition (53-55%) - separate from expansion, starts after portfolio appears
+            this.colorProgress = scrollProgress > 0.53 ? Math.min((scrollProgress - 0.53) / 0.02, 1) : 0;
+            this.whiteOverlay.style.opacity = this.colorProgress;
         } else {
             this.expansionProgress = 0;
+            this.colorProgress = 0;
             this.particleGrowthScale = 1.0;
             this.particleExpansionOffsets = null;
             
@@ -652,15 +654,12 @@ class BackgroundAnimation {
         for (let i = 0; i < positions.length; i += 3) {
             const idx = i / 3;
             
-            // Color transition: turn white as particles expand, then fade out
-            if (this.expansionProgress > 0) {
-                const t = this.expansionProgress;
-                
-                // Turn white in first half (0-0.5)
-                const colorT = Math.min(t * 2, 1);
-                colors[i] = this.originalColors[i] * (1 - colorT) + 1.0 * colorT;
-                colors[i + 1] = this.originalColors[i + 1] * (1 - colorT) + 1.0 * colorT;
-                colors[i + 2] = this.originalColors[i + 2] * (1 - colorT) + 1.0 * colorT;
+            // Color transition: turn white (50-53% scroll), separate from expansion
+            if (this.colorProgress > 0) {
+                const targetColor = 0.992; // #FDFDFD in RGB (253/255)
+                colors[i] = this.originalColors[i] * (1 - this.colorProgress) + targetColor * this.colorProgress;
+                colors[i + 1] = this.originalColors[i + 1] * (1 - this.colorProgress) + targetColor * this.colorProgress;
+                colors[i + 2] = this.originalColors[i + 2] * (1 - this.colorProgress) + targetColor * this.colorProgress;
             } else {
                 colors[i] = this.originalColors[i];
                 colors[i + 1] = this.originalColors[i + 1];
