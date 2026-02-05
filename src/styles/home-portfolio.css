@@ -20,9 +20,6 @@
 }
 
 @media (max-width: 768px) {
-  .portfolio-section {
-    padding-top: 60px;
-  }
   
   .portfolio-section .portfolio-filters {
     top: 70px;

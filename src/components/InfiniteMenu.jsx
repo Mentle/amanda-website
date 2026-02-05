@@ -981,6 +981,49 @@ class InfiniteGridMenu {
     const nearestVertexPos = this.instancePositions[index];
     return vec3.transformQuat(vec3.create(), nearestVertexPos, this.control.orientation);
   }
+
+  // Save the current control state to sessionStorage
+  saveState() {
+    const state = {
+      orientation: Array.from(this.control.orientation),
+      snapDirection: Array.from(this.control.snapDirection),
+      snapTargetDirection: this.control.snapTargetDirection ? Array.from(this.control.snapTargetDirection) : null,
+      _combinedQuat: Array.from(this.control._combinedQuat),
+      pointerRotation: Array.from(this.control.pointerRotation),
+      activeItemIndex: this.activeItemIndex
+    };
+    sessionStorage.setItem('infiniteMenuState', JSON.stringify(state));
+  }
+
+  // Restore the control state from sessionStorage
+  restoreState() {
+    const saved = sessionStorage.getItem('infiniteMenuState');
+    if (!saved) return false;
+    
+    try {
+      const state = JSON.parse(saved);
+      
+      // Restore quaternions and vectors
+      quat.set(this.control.orientation, ...state.orientation);
+      vec3.set(this.control.snapDirection, ...state.snapDirection);
+      if (state.snapTargetDirection) {
+        this.control.snapTargetDirection = vec3.fromValues(...state.snapTargetDirection);
+      }
+      quat.set(this.control._combinedQuat, ...state._combinedQuat);
+      quat.set(this.control.pointerRotation, ...state.pointerRotation);
+      
+      // Restore active item
+      this.activeItemIndex = state.activeItemIndex;
+      if (state.activeItemIndex >= 0 && state.activeItemIndex < this.items.length) {
+        this.onActiveItemChange(state.activeItemIndex);
+      }
+      
+      return true;
+    } catch (e) {
+      console.warn('Failed to restore InfiniteMenu state:', e);
+      return false;
+    }
+  }
 }
 
 const defaultItems = [
@@ -1013,7 +1056,13 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
         items.length ? items : defaultItems,
         handleActiveItem,
         setIsMoving,
-        sk => sk.run(),
+        sk => {
+          sk.run();
+          // Restore state after a small delay to ensure everything is initialized
+          setTimeout(() => {
+            sk.restoreState();
+          }, 100);
+        },
         scale
       );
     }
@@ -1041,6 +1090,12 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
 
   const handleButtonClick = () => {
     if (!activeItem?.link) return;
+    
+    // Save state before navigating
+    if (sketchRef.current) {
+      sketchRef.current.saveState();
+    }
+    
     if (activeItem.link.startsWith('http')) {
       window.open(activeItem.link, '_blank');
     } else {

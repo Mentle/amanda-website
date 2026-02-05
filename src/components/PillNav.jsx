@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './PillNav.css';
 
 const PillNav = ({
   logo,
   logoAlt = 'Logo',
+  logoHref = '/',
   items,
   activeHref,
   className = '',
@@ -17,6 +18,8 @@ const PillNav = ({
   onMobileMenuClick,
   initialLoadAnimation = true
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const resolvedPillTextColor = pillTextColor ?? baseColor;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const circleRefs = useRef([]);
@@ -205,15 +208,38 @@ const PillNav = ({
     onMobileMenuClick?.();
   };
 
+  const handlePortfolioScroll = (e) => {
+    e.preventDefault();
+    
+    // If not on home page, navigate there first
+    if (location.pathname !== '/') {
+      navigate('/');
+      // Wait for navigation, then scroll
+      setTimeout(() => {
+        const targetScroll = window.innerHeight * 0.53;
+        window.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        });
+      }, 100);
+    } else {
+      // Already on home page, just scroll
+      const targetScroll = window.innerHeight * 0.53;
+      window.scrollTo({
+        top: targetScroll,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const isExternalLink = href =>
     href.startsWith('http://') ||
     href.startsWith('https://') ||
     href.startsWith('//') ||
     href.startsWith('mailto:') ||
-    href.startsWith('tel:') ||
-    href.startsWith('#');
+    href.startsWith('tel:');
 
-  const isRouterLink = href => href && !isExternalLink(href);
+  const isRouterLink = href => href && !isExternalLink(href) && !href.startsWith('#');
 
   const cssVars = {
     ['--base']: baseColor,
@@ -225,12 +251,18 @@ const PillNav = ({
   return (
     <div className="pill-nav-container">
       <nav className={`pill-nav ${className}`} aria-label="Primary" style={cssVars}>
-        {isRouterLink(items?.[0]?.href) ? (
+        {isRouterLink(logoHref) ? (
           <Link
             className="pill-logo"
-            to={items[0].href}
+            to={logoHref}
             aria-label="Home"
             onMouseEnter={handleLogoEnter}
+            onClick={(e) => {
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             role="menuitem"
             ref={el => {
               logoRef.current = el;
@@ -241,9 +273,15 @@ const PillNav = ({
         ) : (
           <a
             className="pill-logo"
-            href={items?.[0]?.href || '#'}
+            href={logoHref}
             aria-label="Home"
             onMouseEnter={handleLogoEnter}
+            onClick={(e) => {
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             ref={el => {
               logoRef.current = el;
             }}
@@ -287,6 +325,7 @@ const PillNav = ({
                     aria-label={item.ariaLabel || item.label}
                     onMouseEnter={() => handleEnter(i)}
                     onMouseLeave={() => handleLeave(i)}
+                    onClick={item.href === '#portfolio' ? handlePortfolioScroll : undefined}
                   >
                     <span
                       className="hover-circle"
@@ -335,7 +374,12 @@ const PillNav = ({
                 <a
                   href={item.href}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    if (item.href === '#portfolio') {
+                      handlePortfolioScroll(e);
+                    }
+                    setIsMobileMenuOpen(false);
+                  }}
                 >
                   {item.label}
                 </a>

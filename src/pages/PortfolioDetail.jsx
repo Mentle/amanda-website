@@ -96,7 +96,7 @@ function PortfolioDetail() {
       <div className="portfolio-detail-page">
         <div className="portfolio-detail-error">
           <h2>Project not found</h2>
-          <button onClick={() => navigate('/portfolio')}>Back to Portfolio</button>
+          <button onClick={() => navigate(-1)}>Back to Portfolio</button>
         </div>
       </div>
     )
@@ -104,7 +104,7 @@ function PortfolioDetail() {
 
   return (
     <div className="portfolio-detail-page">
-      <button className="back-button" onClick={() => navigate('/portfolio')}>
+      <button className="back-button" onClick={() => navigate(-1)}>
         ← Back to Portfolio
       </button>
 

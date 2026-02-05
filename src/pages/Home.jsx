@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
 import InfiniteMenu from '../components/InfiniteMenu'
@@ -16,11 +17,23 @@ const builder = imageUrlBuilder(client)
 const urlFor = (source) => builder.image(source)
 
 function Home() {
+  const location = useLocation()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('all')
   const [formationProgress, setFormationProgress] = useState(0)
   const portfolioRef = useRef(null)
+  
+  // Re-trigger scroll visibility check when navigating back OR when loading finishes
+  useEffect(() => {
+    if (loading) return
+    
+    // Small delay to ensure DOM is ready after loading state change
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('scroll'))
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [location.key, loading])
 
   useEffect(() => {
     async function fetchProjects() {
@@ -143,7 +156,6 @@ function Home() {
       } else {
         status = '👻 HIDDEN & SCATTERED'
       }
-      console.log(`${breakpoint} (${width}px) | 📜 Scroll: ${(scrollProgress * 100).toFixed(1)}% | Opacity: ${newOpacity.toFixed(2)} | Formation: ${(newFormation * 100).toFixed(0)}% | ${status} | Range: ${(FADE_START * 100).toFixed(0)}-${(FADE_END * 100).toFixed(0)}%`)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })

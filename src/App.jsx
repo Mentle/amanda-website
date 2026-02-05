@@ -10,7 +10,7 @@ import PortfolioDetail from './pages/PortfolioDetail'
 import Contact from './pages/Contact'
 
 const menuItems = [
-  { label: 'Home', href: '/' },
+  { label: 'PORTFOLIO', href: '#portfolio' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' }
 ]
@@ -72,8 +72,9 @@ function App() {
           <Background onLoadComplete={handleLoadComplete} isActive={isHomePage} />
         </div>
         <PillNav
-          logo={<span style={{ fontSize: '0.6rem', letterSpacing: '0.5px' }}>AM</span>}
+          logo="/images/orchid_logo.png"
           logoAlt="Amanda Michelena"
+          logoHref="/"
           items={menuItems}
           activeHref={location.pathname}
           baseColor="#000000"

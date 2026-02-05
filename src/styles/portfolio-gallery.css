@@ -40,17 +40,27 @@
 .gallery-item {
     position: relative;
     aspect-ratio: 4/5;
-    border-radius: 12px;
+    border-radius: 20px;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background: var(--window-bg);
-    backdrop-filter: blur(10px);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 1px 0 rgba(0, 0, 0, 0.04);
 }
 
 .gallery-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px);
+    box-shadow: 
+      0 16px 48px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      -2px 0 0 rgba(255, 100, 100, 0.04),
+      2px 0 0 rgba(100, 100, 255, 0.04);
 }
 
 .gallery-item.featured {
@@ -116,24 +126,34 @@
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: rgba(0, 0, 0, 0.75);
     font-size: 1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    box-shadow: 
+      0 6px 20px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 0 rgba(0, 0, 0, 0.04);
 }
 
 .gallery-expand:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.05);
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      -1px 0 0 rgba(255, 100, 100, 0.04),
+      1px 0 0 rgba(100, 100, 255, 0.04);
 }
 
 .gallery-info {
@@ -180,8 +200,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(var(--bg-color-rgb), 0.98);
-    backdrop-filter: blur(10px);
+    background: rgba(253, 253, 253, 0.85);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
 }
 
 .lightbox-container {
@@ -415,9 +436,9 @@
 
 .media-prev,
 .media-next {
-    background: rgba(var(--text-color-rgb), 0.6);
-    border: none;
-    color: var(--bg-color);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: rgba(0, 0, 0, 0.75);
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -425,15 +446,25 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     pointer-events: auto;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    box-shadow: 
+      0 8px 28px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 0 rgba(0, 0, 0, 0.04);
 }
 
 .media-prev:hover,
 .media-next:hover {
-    background: rgba(var(--text-color-rgb), 0.8);
-    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.05);
+    box-shadow: 
+      0 12px 36px rgba(0, 0, 0, 0.14),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      -1px 0 0 rgba(255, 100, 100, 0.04),
+      1px 0 0 rgba(100, 100, 255, 0.04);
 }
 
 .media-thumbnails {

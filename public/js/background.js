@@ -76,6 +76,12 @@ class BackgroundAnimation {
         this.particleGrowthScale = 1.0; // particle size multiplier
         this.particleExpansionOffsets = null; // Persistent random offsets for smooth expansion
         
+        // --- Smooth scroll control (prevents fast scrolling) ---
+        this.targetScroll = 0;
+        this.currentScroll = 0;
+        this.scrollSpeed = 0.08; // How fast scroll catches up (lower = slower, smoother)
+        this.isScrollControlActive = true;
+        
         // Color adjustment parameters
         this.colorParams = {
             brightness: 1.0,
@@ -165,6 +171,9 @@ class BackgroundAnimation {
         
         window.addEventListener('resize', this.onWindowResize.bind(this));
         window.addEventListener('scroll', this.handleScroll.bind(this));
+        
+        // Smooth scroll control - intercept wheel events
+        this.initSmoothScroll();
 
         // Start the main animation loop
         this.animate();
@@ -471,6 +480,79 @@ class BackgroundAnimation {
         }
     }
 
+    initSmoothScroll() {
+        // Initialize current scroll position
+        this.targetScroll = window.pageYOffset;
+        this.currentScroll = window.pageYOffset;
+        
+        // Get max scroll (will be ~53% of viewport)
+        const getMaxScroll = () => {
+            return document.documentElement.scrollHeight - window.innerHeight;
+        };
+        
+        // Intercept wheel events for smooth scrolling
+        window.addEventListener('wheel', (e) => {
+            if (!this.isActive || !this.isScrollControlActive) return;
+            
+            e.preventDefault();
+            
+            // Update target scroll based on wheel delta
+            const delta = e.deltaY;
+            const maxScroll = getMaxScroll();
+            this.targetScroll = Math.max(0, Math.min(this.targetScroll + delta, maxScroll));
+        }, { passive: false });
+        
+        // Handle touch scrolling
+        let touchStartY = 0;
+        window.addEventListener('touchstart', (e) => {
+            if (!this.isActive || !this.isScrollControlActive) return;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        window.addEventListener('touchmove', (e) => {
+            if (!this.isActive || !this.isScrollControlActive) return;
+            
+            e.preventDefault();
+            
+            const touchY = e.touches[0].clientY;
+            const delta = (touchStartY - touchY) * 2; // Amplify touch movement
+            touchStartY = touchY;
+            
+            const maxScroll = getMaxScroll();
+            this.targetScroll = Math.max(0, Math.min(this.targetScroll + delta, maxScroll));
+        }, { passive: false });
+        
+        // Sync targetScroll when external scroll happens (e.g., programmatic scrollTo)
+        let lastKnownScroll = window.pageYOffset;
+        window.addEventListener('scroll', () => {
+            if (!this.isActive || !this.isScrollControlActive) return;
+            
+            const currentPos = window.pageYOffset;
+            // If scroll jumped significantly (not from our smooth scroll), sync target
+            if (Math.abs(currentPos - this.currentScroll) > 50) {
+                this.targetScroll = currentPos;
+                this.currentScroll = currentPos;
+            }
+            lastKnownScroll = currentPos;
+        }, { passive: true });
+        
+        // Smooth scroll animation loop
+        const smoothScrollLoop = () => {
+            if (this.isActive && this.isScrollControlActive) {
+                // Smoothly interpolate toward target
+                const diff = this.targetScroll - this.currentScroll;
+                this.currentScroll += diff * this.scrollSpeed;
+                
+                // Only update if there's meaningful difference
+                if (Math.abs(diff) > 0.5) {
+                    window.scrollTo(0, this.currentScroll);
+                }
+            }
+            requestAnimationFrame(smoothScrollLoop);
+        };
+        smoothScrollLoop();
+    }
+
     handleScroll() {
         // Only handle scroll effects when active (on home page)
         if (!this.isActive) {
@@ -507,28 +589,31 @@ class BackgroundAnimation {
             heroContent.style.opacity = Math.max(0, 1 - textProgress * 1.2);
         }
 
-        // Zoom progress (20-45% => up to 0.3 max)
+        // Zoom progress (20-45% => up to 0.3 max, capped at 53% scroll)
         let zoomProgress = 0;
         const maxZoom = 0.3;
         if (scrollProgress > 0.2) {
-            zoomProgress = Math.min((scrollProgress - 0.2) / 0.25, 1) * maxZoom;
+            const cappedScroll = Math.min(scrollProgress, 0.53);
+            zoomProgress = Math.min((cappedScroll - 0.2) / 0.25, 1) * maxZoom;
         }
 
-        // Dissolve progress (45-70% => up to 0.87)
+        // Dissolve progress (45-53% => capped at 53% scroll to freeze particles)
         let dissolveProgress = 0;
         if (scrollProgress > 0.45) {
-            dissolveProgress = Math.min((scrollProgress - 0.45) / 0.25, 1) * 0.87;
+            const cappedScroll = Math.min(scrollProgress, 0.53);
+            dissolveProgress = Math.min((cappedScroll - 0.45) / 0.25, 1) * 0.87;
         }
         this.disperseProgress = dissolveProgress;
 
-        // Particle expansion progress (50-100%) - original range for particle growth
+        // Particle expansion progress - original rate but CAPPED at 53% scroll
         if (scrollProgress > 0.5) {
-            // from 0.5 to 1.0 => expansionProgress: 0..1
-            const expansionRange = 0.5; // 1.0 - 0.5
-            this.expansionProgress = Math.min((scrollProgress - 0.5) / expansionRange, 1);
+            // Use original 50-100% rate, but cap scroll input at 53%
+            const cappedScroll = Math.min(scrollProgress, 0.53);
+            const expansionRange = 0.5; // Original range for same rate
+            this.expansionProgress = (cappedScroll - 0.5) / expansionRange;
             
-            // Grow particles as they expand - large growth over longer scroll range
-            this.particleGrowthScale = 1.0 + (this.expansionProgress * 400); // Grow up to 401x size
+            // Grow particles - same rate, just stops at 53%
+            this.particleGrowthScale = 1.0 + (this.expansionProgress * 400);
             
             // Initialize persistent random offsets once
             if (!this.particleExpansionOffsets && this.model) {
@@ -554,14 +639,14 @@ class BackgroundAnimation {
                     height: 100%;
                     background: #FDFDFD;
                     pointer-events: none;
-                    z-index: 3;
+                    z-index: 4;
                     opacity: 0;
                 `;
-                document.body.insertBefore(this.whiteOverlay, document.body.firstChild);
+                document.body.appendChild(this.whiteOverlay);
             }
             
-            // Color transition (53-55%) - separate from expansion, starts after portfolio appears
-            this.colorProgress = scrollProgress > 0.53 ? Math.min((scrollProgress - 0.53) / 0.02, 1) : 0;
+            // Color transition (51-53%) - completes with expansion
+            this.colorProgress = Math.min(Math.max((scrollProgress - 0.51) / 0.02, 0), 1);
             this.whiteOverlay.style.opacity = this.colorProgress;
         } else {
             this.expansionProgress = 0;
@@ -721,7 +806,8 @@ class BackgroundAnimation {
         }
 
         // --- NEW: Particle expansion to fill screen ---
-        if (this.expansionProgress > 0) {
+        // Only update expansion positions up to 53% scroll, then freeze
+        if (this.expansionProgress > 0 && this.scrollProgress <= 0.53) {
             const t = this.expansionProgress; // 0..1
             
             // Calculate viewport dimensions in world space
