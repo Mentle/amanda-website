@@ -25,9 +25,9 @@ export default {
       type: 'string',
       options: {
         list: [
-          {title: 'Social Media Content', value: 'social-media-content'},
-          {title: 'Editorials & Publications', value: 'editorials-publications'},
-          {title: 'Music Videos', value: 'music-videos'},
+          {title: 'Clients', value: 'clients'},
+          {title: 'Publications', value: 'publications'},
+          {title: 'Personal Work', value: 'personal-work'},
         ],
         layout: 'radio'
       },

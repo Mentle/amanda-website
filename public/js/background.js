@@ -212,6 +212,7 @@ class BackgroundAnimation {
 
         // Add this at the end of the constructor
         this.windowScrollHandler = this.preventBackgroundScroll.bind(this);
+        window.__backgroundAnimationInstance = this;
     }
 
     // --------------------------------------------------
@@ -480,6 +481,19 @@ class BackgroundAnimation {
         }
     }
 
+    setScrollTarget(targetY) {
+        if (!Number.isFinite(targetY)) return;
+
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        this.targetScroll = Math.max(0, Math.min(targetY, maxScroll));
+
+        // If smooth control is disabled, fall back to immediate scroll.
+        if (!this.isScrollControlActive) {
+            this.currentScroll = this.targetScroll;
+            window.scrollTo(0, this.currentScroll);
+        }
+    }
+
     initSmoothScroll() {
         // Initialize current scroll position
         this.targetScroll = window.pageYOffset;
@@ -504,13 +518,27 @@ class BackgroundAnimation {
         
         // Handle touch scrolling
         let touchStartY = 0;
+        let isTouchingInfiniteMenu = false;
+        const isInfiniteMenuTouchTarget = (target) => {
+            if (!(target instanceof Element)) return false;
+            return Boolean(target.closest('#infinite-grid-menu-canvas, .action-button'));
+        };
+
         window.addEventListener('touchstart', (e) => {
             if (!this.isActive || !this.isScrollControlActive) return;
+
+            isTouchingInfiniteMenu = isInfiniteMenuTouchTarget(e.target);
             touchStartY = e.touches[0].clientY;
         }, { passive: true });
         
         window.addEventListener('touchmove', (e) => {
             if (!this.isActive || !this.isScrollControlActive) return;
+
+            // Let InfiniteMenu own touch gestures so drag does not scroll the page.
+            if (isTouchingInfiniteMenu || isInfiniteMenuTouchTarget(e.target)) {
+                touchStartY = e.touches[0].clientY;
+                return;
+            }
             
             e.preventDefault();
             
@@ -521,6 +549,14 @@ class BackgroundAnimation {
             const maxScroll = getMaxScroll();
             this.targetScroll = Math.max(0, Math.min(this.targetScroll + delta, maxScroll));
         }, { passive: false });
+
+        window.addEventListener('touchend', () => {
+            isTouchingInfiniteMenu = false;
+        }, { passive: true });
+
+        window.addEventListener('touchcancel', () => {
+            isTouchingInfiniteMenu = false;
+        }, { passive: true });
         
         // Sync targetScroll when external scroll happens (e.g., programmatic scrollTo)
         let lastKnownScroll = window.pageYOffset;
@@ -541,7 +577,34 @@ class BackgroundAnimation {
             if (this.isActive && this.isScrollControlActive) {
                 // Smoothly interpolate toward target
                 const diff = this.targetScroll - this.currentScroll;
-                this.currentScroll += diff * this.scrollSpeed;
+                let nextScroll = this.currentScroll + diff * this.scrollSpeed;
+
+                // Slow both directions inside the orchid <-> portfolio transition window.
+                const heroHeight = window.innerHeight;
+                const transitionStart = heroHeight * 0.5;
+                const transitionEnd = heroHeight * 0.53;
+                const crossesIntoTransitionFromTop = this.currentScroll > transitionEnd && nextScroll < transitionEnd;
+                const crossesIntoTransitionFromBottom = this.currentScroll < transitionStart && nextScroll > transitionStart;
+                const isInTransitionWindow = this.currentScroll >= transitionStart && this.currentScroll <= transitionEnd;
+
+                if (crossesIntoTransitionFromTop) {
+                    nextScroll = transitionEnd;
+                } else if (crossesIntoTransitionFromBottom) {
+                    nextScroll = transitionStart;
+                }
+
+                if (isInTransitionWindow || crossesIntoTransitionFromTop || crossesIntoTransitionFromBottom) {
+                    const transitionStep = nextScroll - this.currentScroll;
+                    const isScrollingUp = transitionStep < 0;
+                    const maxTransitionStep = isScrollingUp
+                        ? Math.max(0.5, heroHeight * 0.0018)
+                        : Math.max(1.8, heroHeight * 0.0028);
+                    const limitedTransitionStep =
+                        Math.sign(transitionStep) * Math.min(Math.abs(transitionStep), maxTransitionStep);
+                    nextScroll = this.currentScroll + limitedTransitionStep;
+                }
+
+                this.currentScroll = nextScroll;
                 
                 // Only update if there's meaningful difference
                 if (Math.abs(diff) > 0.5) {

@@ -208,27 +208,39 @@ const PillNav = ({
     onMobileMenuClick?.();
   };
 
+  const scrollWithBackgroundController = (targetScroll) => {
+    const backgroundAnimation = window.__backgroundAnimationInstance;
+
+    if (backgroundAnimation && typeof backgroundAnimation.setScrollTarget === 'function') {
+      backgroundAnimation.setScrollTarget(targetScroll);
+      return;
+    }
+
+    window.scrollTo({
+      top: targetScroll,
+      behavior: 'smooth'
+    });
+  };
+
+  const scrollToPortfolio = () => {
+    const targetScroll = window.innerHeight * 0.53;
+    scrollWithBackgroundController(targetScroll);
+  };
+
+  const scrollToOrchid = () => {
+    scrollWithBackgroundController(0);
+  };
+
   const handlePortfolioScroll = (e) => {
     e.preventDefault();
     
     // If not on home page, navigate there first
     if (location.pathname !== '/') {
-      navigate('/');
-      // Wait for navigation, then scroll
-      setTimeout(() => {
-        const targetScroll = window.innerHeight * 0.53;
-        window.scrollTo({
-          top: targetScroll,
-          behavior: 'smooth'
-        });
-      }, 100);
+      sessionStorage.setItem('scrollToPortfolioOnHome', '1');
+      navigate('/', { state: { scrollToPortfolio: true } });
     } else {
       // Already on home page, just scroll
-      const targetScroll = window.innerHeight * 0.53;
-      window.scrollTo({
-        top: targetScroll,
-        behavior: 'smooth'
-      });
+      scrollToPortfolio();
     }
   };
 
@@ -260,7 +272,13 @@ const PillNav = ({
             onClick={(e) => {
               if (location.pathname === '/') {
                 e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                scrollToOrchid();
+              } else {
+                e.preventDefault();
+                navigate('/');
+                setTimeout(() => {
+                  scrollToOrchid();
+                }, 100);
               }
             }}
             role="menuitem"
@@ -279,7 +297,13 @@ const PillNav = ({
             onClick={(e) => {
               if (location.pathname === '/') {
                 e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                scrollToOrchid();
+              } else {
+                e.preventDefault();
+                navigate('/');
+                setTimeout(() => {
+                  scrollToOrchid();
+                }, 100);
               }
             }}
             ref={el => {

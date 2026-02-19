@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
 import InfiniteMenu from '../components/InfiniteMenu'
@@ -15,14 +15,53 @@ const client = createClient({
 
 const builder = imageUrlBuilder(client)
 const urlFor = (source) => builder.image(source)
+let cachedHomeProjects = null
+let cachedVersion = null
+// Bump this number to force a cache bust after schema/data changes
+const CACHE_VERSION = 2
 
 function Home() {
   const location = useLocation()
-  const [projects, setProjects] = useState([])
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+  const isCacheValid = cachedHomeProjects && cachedVersion === CACHE_VERSION
+  const [projects, setProjects] = useState(() => isCacheValid ? cachedHomeProjects : [])
+  const [loading, setLoading] = useState(() => !isCacheValid)
   const [activeFilter, setActiveFilter] = useState('all')
   const [formationProgress, setFormationProgress] = useState(0)
   const portfolioRef = useRef(null)
+
+  useEffect(() => {
+    if (location.pathname !== '/') return
+    if (loading) return
+
+    const shouldScrollFromState = Boolean(location.state?.scrollToPortfolio)
+    const shouldScrollFromStorage = sessionStorage.getItem('scrollToPortfolioOnHome') === '1'
+    if (!shouldScrollFromState && !shouldScrollFromStorage) return
+
+    const timer = setTimeout(() => {
+      const targetScroll = window.innerHeight * 0.53
+      const backgroundAnimation = window.__backgroundAnimationInstance
+
+      if (backgroundAnimation && typeof backgroundAnimation.setScrollTarget === 'function') {
+        backgroundAnimation.setScrollTarget(targetScroll)
+      } else {
+        window.scrollTo({ top: targetScroll, behavior: 'smooth' })
+      }
+
+      sessionStorage.removeItem('scrollToPortfolioOnHome')
+
+      if (shouldScrollFromState) {
+        const nextState = { ...(location.state || {}) }
+        delete nextState.scrollToPortfolio
+        navigate('/', {
+          replace: true,
+          state: Object.keys(nextState).length ? nextState : null
+        })
+      }
+    }, 80)
+
+    return () => clearTimeout(timer)
+  }, [location.pathname, location.state, loading, navigate])
   
   // Re-trigger scroll visibility check when navigating back OR when loading finishes
   useEffect(() => {
@@ -36,6 +75,14 @@ function Home() {
   }, [location.key, loading])
 
   useEffect(() => {
+    if (cachedHomeProjects && cachedVersion === CACHE_VERSION) {
+      setProjects(cachedHomeProjects)
+      setLoading(false)
+      return
+    }
+
+    let isMounted = true
+
     async function fetchProjects() {
       const query = `*[_type == "portfolio" && published == true] | order(order asc) {
         _id,
@@ -64,15 +111,24 @@ function Home() {
       
       try {
         const result = await client.fetch(query)
+        if (!isMounted) return
+        cachedHomeProjects = result
+        cachedVersion = CACHE_VERSION
         setProjects(result)
       } catch (error) {
+        if (!isMounted) return
         console.error('Error fetching projects:', error)
       } finally {
+        if (!isMounted) return
         setLoading(false)
       }
     }
     
     fetchProjects()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   // Fade in portfolio when orchid animation completes - use ref to avoid re-renders
@@ -167,7 +223,7 @@ function Home() {
   // Filter projects based on active filter (media type)
   const filteredProjects = activeFilter === 'all' 
     ? projects 
-    : projects.filter(project => project.mainMedia?.mediaType === activeFilter);
+    : projects.filter(project => project.category === activeFilter);
 
   const items = filteredProjects.map(project => {
     let imageUrl = null;
@@ -192,8 +248,9 @@ function Home() {
 
   const filters = [
     { label: 'All', value: 'all' },
-    { label: 'Images', value: 'image' },
-    { label: 'Videos', value: 'video' }
+    { label: 'Clients', value: 'clients' },
+    { label: 'Publications', value: 'publications' },
+    { label: 'Personal Work', value: 'personal-work' }
   ];
 
   return (
@@ -202,14 +259,6 @@ function Home() {
         <div className="hero-content">
           <div className="intro-text">
             <span className="greeting">¡Hola! </span>I am a Creative Producer for fashion and luxury. I spend most of my time researching, creating and sharing beautiful content related to my biggest obsessions: <em>Fashion, Food and Flowers</em>
-          </div>
-          <div className="social-links">
-            <a href="mailto:amandamichelena@gmail.com" className="social-link">
-              <i className="fas fa-envelope"></i>
-            </a>
-            <a href="https://instagram.com/amandamichelena" target="_blank" rel="noopener noreferrer" className="social-link">
-              <i className="fab fa-instagram"></i>
-            </a>
           </div>
           <div className="scroll-indicator">
             Scroll Down For More
@@ -236,7 +285,7 @@ function Home() {
             ))}
           </div>
           <div style={{ height: '100vh', width: '100%', position: 'relative' }}>
-            <InfiniteMenu items={items} scale={3} formationProgress={formationProgress} />
+            <InfiniteMenu key={activeFilter} items={items} scale={3} formationProgress={formationProgress} />
           </div>
         </section>
       )}

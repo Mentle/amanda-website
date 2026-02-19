@@ -3,6 +3,59 @@ import { useNavigate } from 'react-router-dom';
 import { mat4, quat, vec2, vec3 } from 'gl-matrix';
 import './InfiniteMenu.css';
 
+const MENU_CELL_SIZE = 256;
+const MENU_IMAGE_LOAD_TIMEOUT_MS = 1000;
+const MENU_IMAGE_TIMEOUT_TOKEN = Symbol('menu-image-timeout');
+const menuImageCache = new Map();
+const menuAtlasCache = new Map();
+
+const getMenuImage = src => {
+  if (!src) return Promise.resolve(null);
+
+  if (menuImageCache.has(src)) {
+    return menuImageCache.get(src);
+  }
+
+  const promise = new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+
+  menuImageCache.set(src, promise);
+  return promise;
+};
+
+const withTimeout = (promise, timeoutMs) =>
+  new Promise(resolve => {
+    const timeoutId = setTimeout(() => {
+      resolve(MENU_IMAGE_TIMEOUT_TOKEN);
+    }, timeoutMs);
+
+    promise
+      .then(result => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      })
+      .catch(() => {
+        clearTimeout(timeoutId);
+        resolve(null);
+      });
+  });
+
+const cloneCanvas = sourceCanvas => {
+  const cachedCanvas = document.createElement('canvas');
+  cachedCanvas.width = sourceCanvas.width;
+  cachedCanvas.height = sourceCanvas.height;
+  const cachedCtx = cachedCanvas.getContext('2d', { alpha: true });
+  if (cachedCtx) {
+    cachedCtx.drawImage(sourceCanvas, 0, 0);
+  }
+  return cachedCanvas;
+};
+
 const discVertShaderSource = `#version 300 es
 
 uniform mat4 uWorldMatrix;
@@ -702,10 +755,26 @@ class InfiniteGridMenu {
     this.tex = createAndSetupTexture(gl, gl.LINEAR, gl.LINEAR, gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE);
 
     const itemCount = Math.max(1, this.items.length);
+    const imageSources = this.items.map(item => item.image || '');
+    const atlasCacheKey = `${itemCount}|${imageSources.join('|')}`;
+    const cachedAtlas = menuAtlasCache.get(atlasCacheKey);
+
+    if (cachedAtlas) {
+      this.atlasSize = cachedAtlas.atlasSize;
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cachedAtlas.canvas);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      return;
+    }
+
     this.atlasSize = Math.ceil(Math.sqrt(itemCount));
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true, willReadFrequently: true });
-    const cellSize = 256; // Optimized for fastest loading
+    const cellSize = MENU_CELL_SIZE;
+
+    if (!ctx) {
+      return;
+    }
 
     canvas.width = this.atlasSize * cellSize;
     canvas.height = this.atlasSize * cellSize;
@@ -717,43 +786,53 @@ class InfiniteGridMenu {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
     gl.generateMipmap(gl.TEXTURE_2D);
 
+    const uploadCell = (x, y) => {
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        x,
+        y,
+        cellSize,
+        cellSize,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        ctx.getImageData(x, y, cellSize, cellSize)
+      );
+    };
+
     // Load all images asynchronously (including video thumbnails)
     const loadMedia = async () => {
-      this.items.forEach((item, index) => {
+      let hasTimedOutImages = false;
+
+      const drawTasks = this.items.map(async (item, index) => {
         const x = (index % this.atlasSize) * cellSize;
         const y = Math.floor(index / this.atlasSize) * cellSize;
-        
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        const timeout = setTimeout(() => {
-          // Timeout - leave transparent, no placeholder
-          gl.bindTexture(gl.TEXTURE_2D, this.tex);
-          gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, cellSize, cellSize, gl.RGBA, gl.UNSIGNED_BYTE, 
-            ctx.getImageData(x, y, cellSize, cellSize));
-        }, 1000);
-        
-        img.onload = () => {
-          clearTimeout(timeout);
+
+        const imageResult = await withTimeout(getMenuImage(item.image), MENU_IMAGE_LOAD_TIMEOUT_MS);
+        if (imageResult === MENU_IMAGE_TIMEOUT_TOKEN) {
+          hasTimedOutImages = true;
+          uploadCell(x, y);
+          return;
+        }
+
+        if (imageResult) {
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, x, y, cellSize, cellSize);
-          
-          gl.bindTexture(gl.TEXTURE_2D, this.tex);
-          gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, cellSize, cellSize, gl.RGBA, gl.UNSIGNED_BYTE, 
-            ctx.getImageData(x, y, cellSize, cellSize));
-        };
-        
-        img.onerror = () => {
-          clearTimeout(timeout);
-          // Leave transparent on error, no placeholder
-          gl.bindTexture(gl.TEXTURE_2D, this.tex);
-          gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, cellSize, cellSize, gl.RGBA, gl.UNSIGNED_BYTE, 
-            ctx.getImageData(x, y, cellSize, cellSize));
-        };
-        
-        img.src = item.image;
+          ctx.drawImage(imageResult, x, y, cellSize, cellSize);
+        }
+
+        uploadCell(x, y);
       });
+
+      await Promise.all(drawTasks);
+
+      if (!hasTimedOutImages) {
+        menuAtlasCache.set(atlasCacheKey, {
+          atlasSize: this.atlasSize,
+          canvas: cloneCanvas(canvas)
+        });
+      }
     };
 
     loadMedia();
