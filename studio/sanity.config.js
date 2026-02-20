@@ -10,7 +10,28 @@ export default defineConfig({
   projectId: 'sy1y9q7w',
   dataset: 'production',
 
-  plugins: [structureTool(), visionTool()],
+  plugins: [
+    structureTool({
+      structure: (S) =>
+        S.list()
+          .title('Content')
+          .items([
+            S.listItem()
+              .title('Site Settings')
+              .id('siteSettings')
+              .child(
+                S.document()
+                  .schemaType('siteSettings')
+                  .documentId('siteSettings')
+              ),
+            S.divider(),
+            ...S.documentTypeListItems().filter(
+              (item) => !['siteSettings'].includes(item.getId())
+            ),
+          ]),
+    }),
+    visionTool(),
+  ],
 
   schema: {
     types: schemaTypes,

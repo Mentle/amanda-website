@@ -10,9 +10,9 @@ import PortfolioDetail from './pages/PortfolioDetail'
 import Contact from './pages/Contact'
 
 const menuItems = [
-  { label: 'PORTFOLIO', href: '#portfolio' },
-  { label: 'About', href: '/about' },
-  { label: 'Contact', href: '/contact' }
+  { label: 'Work', href: '#portfolio' },
+  { label: 'Services', href: '/services' },
+  { label: 'About', href: '/about' }
 ]
 
 function App() {
@@ -26,12 +26,6 @@ function App() {
     // Clean up scroll effects when navigating
     document.body.classList.remove('scrolled')
     document.documentElement.classList.remove('scrolled')
-    
-    // Remove white overlay if it exists
-    const whiteOverlay = document.getElementById('white-transition-overlay')
-    if (whiteOverlay) {
-      whiteOverlay.remove()
-    }
     
     if (isHomePage) {
       // Scroll to top when returning to home
@@ -86,8 +80,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-          <Route path="/portfolio/:slug" element={<PortfolioDetail />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/work/:slug" element={<PortfolioDetail />} />
+          <Route path="/services" element={<Contact />} />
         </Routes>
       </div>
     </PasswordGate>

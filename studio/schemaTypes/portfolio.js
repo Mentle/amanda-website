@@ -34,27 +34,6 @@ export default {
       validation: Rule => Rule.required()
     },
     {
-      name: 'clientLogos',
-      title: 'Client Logo(s)',
-      type: 'array',
-      of: [
-        {
-          type: 'image',
-          options: {
-            hotspot: true,
-          },
-          fields: [
-            {
-              name: 'alt',
-              title: 'Alt Text',
-              type: 'string',
-            }
-          ]
-        }
-      ],
-      description: 'Optional - can add multiple client logos'
-    },
-    {
       name: 'projectDescription',
       title: 'Project Description',
       type: 'text',
@@ -253,16 +232,14 @@ export default {
       title: 'title',
       category: 'category',
       role: 'role',
-      mainMediaType: 'mainMedia.mediaType',
-      mainImage: 'mainMedia.image',
-      clientLogo: 'clientLogos.0'
+      mainImage: 'mainMedia.image'
     },
     prepare(selection) {
-      const {title, category, role, mainImage, clientLogo} = selection
+      const {title, category, role, mainImage} = selection
       return {
         title: title,
         subtitle: `${category || 'No category'} - ${role || 'No role'}`,
-        media: clientLogo || mainImage
+        media: mainImage
       }
     }
   },

@@ -681,8 +681,11 @@ class InfiniteGridMenu {
     this.#deltaFrames = this.#deltaTime / this.TARGET_FRAME_DURATION;
     this.#frames += this.#deltaFrames;
 
-    this.#animate(this.#deltaTime);
-    this.#render();
+    // Skip heavy work when menu is not visible (orchid section)
+    if (this.formationProgress > 0) {
+      this.#animate(this.#deltaTime);
+      this.#render();
+    }
 
     requestAnimationFrame(t => this.run(t));
   }
@@ -720,7 +723,7 @@ class InfiniteGridMenu {
       uAtlasSize: gl.getUniformLocation(this.discProgram, 'uAtlasSize')
     };
 
-    this.discGeo = new DiscGeometry(56, 1);
+    this.discGeo = new DiscGeometry(32, 1);
     this.discBuffers = this.discGeo.data;
     this.discVAO = makeVertexArray(
       gl,

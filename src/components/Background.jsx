@@ -36,13 +36,6 @@ function Background({ onLoadComplete, isActive = true }) {
 
     scriptsInitialized = true
 
-    // Load CSS particles for floating background effect (only once)
-    if (!window.CSSParticles && !document.querySelector('script[src="/js/cssParticles.js"]')) {
-      const particlesScript = document.createElement('script')
-      particlesScript.src = '/js/cssParticles.js'
-      document.body.appendChild(particlesScript)
-    }
-
     // Load Three.js first
     if (!window.THREE) {
       const threeScript = document.createElement('script')

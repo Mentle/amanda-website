@@ -84,7 +84,7 @@ function Portfolio() {
 
     return {
       image: imageUrl,
-      link: `/portfolio/${project.slug?.current || project._id}`,
+      link: `/work/${project.slug?.current || project._id}`,
       title: project.title,
       description: project.role || project.projectDescription?.substring(0, 50) || '',
       isVideo: project.mainMedia?.mediaType === 'video'

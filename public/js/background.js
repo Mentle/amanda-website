@@ -72,7 +72,8 @@ class BackgroundAnimation {
 
         // --- Particle expansion effect ---
         this.expansionProgress = 0;     // goes from 0..1 after scroll > 0.5 (50-100%)
-        this.colorProgress = 0;         // goes from 0..1 after scroll > 0.5 (50-53% for white transition)
+        this.colorProgress = 0;         // goes from 0..1 (51-52% for white transition)
+        this.opacityProgress = 0;       // goes from 0..1 (52-53% for opacity fade)
         this.particleGrowthScale = 1.0; // particle size multiplier
         this.particleExpansionOffsets = null; // Persistent random offsets for smooth expansion
         
@@ -97,7 +98,7 @@ class BackgroundAnimation {
         // Set up lights, camera, and initial positions
         this.calculateCameraPosition();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.camera.position.copy(this.initialCameraPosition);
         this.camera.lookAt(0, 0, 0);
 
@@ -463,17 +464,12 @@ class BackgroundAnimation {
             document.body.classList.remove('scrolled');
             document.documentElement.classList.remove('scrolled');
             
-            // Remove white overlay if it exists
-            if (this.whiteOverlay && this.whiteOverlay.parentNode) {
-                this.whiteOverlay.parentNode.removeChild(this.whiteOverlay);
-                this.whiteOverlay = null;
-            }
-            
             // Reset scroll progress
             this.scrollProgress = 0;
             this.disperseProgress = 0;
             this.expansionProgress = 0;
             this.colorProgress = 0;
+            this.opacityProgress = 0;
             this.particleGrowthScale = 1.0;
         } else {
             // When becoming active again, trigger scroll handler to sync state
@@ -690,37 +686,25 @@ class BackgroundAnimation {
                 }
             }
             
-            // Create white overlay if it doesn't exist
-            if (!this.whiteOverlay) {
-                this.whiteOverlay = document.createElement('div');
-                this.whiteOverlay.id = 'white-transition-overlay';
-                this.whiteOverlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: #FDFDFD;
-                    pointer-events: none;
-                    z-index: 4;
-                    opacity: 0;
-                `;
-                document.body.appendChild(this.whiteOverlay);
-            }
+            // Color transition to white (51-52%)
+            this.colorProgress = Math.min(Math.max((scrollProgress - 0.51) / 0.01, 0), 1);
             
-            // Color transition (51-53%) - completes with expansion
-            this.colorProgress = Math.min(Math.max((scrollProgress - 0.51) / 0.02, 0), 1);
-            this.whiteOverlay.style.opacity = this.colorProgress;
+            // Opacity fade (52-53%) - starts AFTER particles are white
+            this.opacityProgress = Math.min(Math.max((scrollProgress - 0.52) / 0.01, 0), 1);
+            
+            // Apply blur to canvas as particles get close to camera
+            // Blur starts at 51% scroll and increases
+            const blurAmount = this.colorProgress * 8; // Max 8px blur
+            this.renderer.domElement.style.filter = blurAmount > 0 ? `blur(${blurAmount}px)` : 'none';
         } else {
             this.expansionProgress = 0;
             this.colorProgress = 0;
+            this.opacityProgress = 0;
             this.particleGrowthScale = 1.0;
             this.particleExpansionOffsets = null;
             
-            // Fade out overlay
-            if (this.whiteOverlay) {
-                this.whiteOverlay.style.opacity = 0;
-            }
+            // Remove blur when scrolled back up
+            this.renderer.domElement.style.filter = 'none';
         }
 
         // Interpolate camera position for the zoom
@@ -746,6 +730,12 @@ class BackgroundAnimation {
     animate() {
         requestAnimationFrame(this.animate.bind(this));
 
+        // Skip heavy work when portfolio is visible (scrollProgress > 0.6)
+        // The orchid is fully faded/dispersed at this point anyway
+        if (this.scrollProgress > 0.6) {
+            return;
+        }
+
         // Update points (main model’s dissolve/mouse logic)
         this.updatePoints();
 
@@ -767,13 +757,9 @@ class BackgroundAnimation {
         if (this.model && this.model.material) {
             this.model.material.size = this.particleSize * this.particleGrowthScale;
             
-            // Fade out particles in second half of expansion (0.5-1.0)
-            if (this.expansionProgress > 0.5) {
-                const fadeT = (this.expansionProgress - 0.5) / 0.5; // 0..1
-                this.model.material.opacity = 1 - fadeT;
-            } else {
-                this.model.material.opacity = 1;
-            }
+            // Fade out particles based on opacityProgress (52-53% scroll)
+            // This reveals the white page background AFTER particles turn white
+            this.model.material.opacity = 1 - this.opacityProgress;
         }
 
         this.renderer.render(this.scene, this.camera);
@@ -1085,7 +1071,7 @@ class BackgroundAnimation {
                     sizeAttenuation: true,
                     map: this.createParticleTexture(),
                     transparent: true,
-                    alphaTest: 0.5
+                    alphaTest: 0.01  // Low value for smooth opacity fade
                 });
 
                 this.model = new THREE.Points(bufferGeometry, material);

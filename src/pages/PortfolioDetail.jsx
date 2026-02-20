@@ -26,12 +26,6 @@ function PortfolioDetail() {
         title,
         slug,
         category,
-        "clientLogos": clientLogos[]{
-          asset,
-          crop,
-          hotspot,
-          alt
-        },
         projectDescription,
         role,
         roleDescription,
@@ -111,13 +105,6 @@ function PortfolioDetail() {
       <div className="portfolio-detail-header">
         <span className="portfolio-detail-category">{getCategoryLabel(project.category)}</span>
         <h1>{project.title}</h1>
-        {project.clientLogos?.length > 0 && (
-          <div className="portfolio-detail-logos">
-            {project.clientLogos.map((logo, i) => (
-              <img key={i} src={urlFor(logo).width(120).url()} alt={logo.alt || 'Client logo'} />
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="portfolio-detail-media">

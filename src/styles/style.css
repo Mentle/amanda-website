@@ -226,6 +226,22 @@ section {
     font-weight: 500;
 }
 
+.hero-title {
+    font-size: clamp(18px, 1.8vw, 28px);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #1F1F1F;
+    margin: 0 0 1em 0;
+}
+
+.hero-subtitle {
+    font-size: clamp(12px, 1vw, 15px);
+    font-weight: 400;
+    line-height: 1.6;
+    color: #4a4a4a;
+    margin: 0;
+}
+
 .scroll-indicator {
     position: fixed;
     bottom: 10vh;

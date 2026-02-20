@@ -68,13 +68,13 @@ function Header() {
             <i className="fas fa-user"></i>
             <span>About</span>
           </Link>
-          <Link to="/portfolio" className="nav-menu-item" onClick={closeMenu}>
+          <Link to="/work" className="nav-menu-item" onClick={closeMenu}>
             <i className="fas fa-briefcase"></i>
-            <span>Portfolio</span>
+            <span>Work</span>
           </Link>
-          <Link to="/contact" className="nav-menu-item" onClick={closeMenu}>
+          <Link to="/services" className="nav-menu-item" onClick={closeMenu}>
             <i className="fas fa-envelope"></i>
-            <span>Contact</span>
+            <span>Services</span>
           </Link>
         </div>
       </div>
