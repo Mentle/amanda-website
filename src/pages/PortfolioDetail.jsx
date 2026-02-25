@@ -18,6 +18,18 @@ function PortfolioDetail() {
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [heroLoaded, setHeroLoaded] = useState(false)
+
+  const getImageAspect = (project) => {
+    // Parse dimensions from Sanity _ref: "image-xxxx-WxH-ext"
+    const ref = project?.mainMedia?.image?.asset?._ref || ''
+    const match = ref.match(/-([0-9]+)x([0-9]+)-/)
+    if (!match) return 'landscape'
+    const ratio = parseInt(match[1]) / parseInt(match[2])
+    if (ratio < 0.85) return 'portrait'
+    if (ratio < 1.2) return 'square'
+    return 'landscape'
+  }
 
   useEffect(() => {
     async function fetchProject() {
@@ -98,80 +110,105 @@ function PortfolioDetail() {
 
   return (
     <div className="portfolio-detail-page">
-      <button className="back-button" onClick={() => navigate(-1)}>
-        ← Back to Portfolio
-      </button>
 
-      <div className="portfolio-detail-header">
+      {/* Top nav bar */}
+      <div className="portfolio-detail-topbar">
+        <button className="back-button" onClick={() => navigate(-1)}>← Work</button>
         <span className="portfolio-detail-category">{getCategoryLabel(project.category)}</span>
-        <h1>{project.title}</h1>
       </div>
 
-      <div className="portfolio-detail-media">
-        {project.mainMedia?.mediaType === 'video' && project.mainMedia?.videoUrl ? (
-          <video src={project.mainMedia.videoUrl} controls autoPlay muted loop />
-        ) : project.mainMedia?.image ? (
-          <img src={urlFor(project.mainMedia.image).width(1400).url()} alt={project.title} />
-        ) : null}
-      </div>
-
-      <div className="portfolio-detail-content">
-        <div className="portfolio-detail-description">
-          <h2>About the Project</h2>
-          <p>{project.projectDescription}</p>
+      {/* Hero + info */}
+      <div className="portfolio-detail-main" data-aspect={getImageAspect(project)}>
+        <div className={`portfolio-detail-hero-image ${heroLoaded ? 'hero-loaded' : ''}`}>
+          {project.mainMedia?.mediaType === 'video' && project.mainMedia?.videoUrl ? (
+            <video
+              src={project.mainMedia.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              onCanPlay={() => setHeroLoaded(true)}
+            />
+          ) : project.mainMedia?.image ? (
+            <img
+              src={urlFor(project.mainMedia.image).width(1200).format('webp').quality(85).url()}
+              alt={project.title}
+              onLoad={() => setHeroLoaded(true)}
+            />
+          ) : null}
         </div>
 
-        <div className="portfolio-detail-meta">
-          <div className="portfolio-detail-role">
-            <h3>Role</h3>
-            <p className="role-title">{project.role}</p>
+        <div className="portfolio-detail-hero-info">
+          <div className="portfolio-detail-hero-info-top">
+            <h1>{project.title}</h1>
+            <p className="portfolio-detail-role-inline">{project.role}</p>
+          </div>
+
+          <div className="portfolio-detail-hero-info-body">
+            <p className="portfolio-detail-desc-text">{project.projectDescription}</p>
             {project.roleDescription && <p className="role-desc">{project.roleDescription}</p>}
           </div>
 
-          {project.skills?.length > 0 && (
-            <div className="portfolio-detail-skills">
-              <h3>Skills & Tools</h3>
-              <div className="skills-tags">
-                {project.skills.map((skill, i) => (
-                  <span key={i} className="skill-tag">{skill}</span>
-                ))}
+          <div className="portfolio-detail-hero-info-meta">
+            {project.skills?.length > 0 && (
+              <div className="portfolio-detail-meta-block">
+                <h3>Skills & Tools</h3>
+                <div className="skills-tags">
+                  {project.skills.map((skill, i) => (
+                    <span key={i} className="skill-tag">{skill}</span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {project.metrics?.length > 0 && (
-            <div className="portfolio-detail-metrics">
-              <h3>Results</h3>
-              <div className="metrics-grid">
-                {project.metrics.map((metric, i) => (
-                  <div key={i} className="metric-item">
-                    <span className="metric-value">{metric.value}</span>
-                    <span className="metric-platform">{metric.platform}</span>
+            {project.metrics?.length > 0 && (
+              <div className="portfolio-detail-meta-block">
+                <h3>Results</h3>
+                <div className="metrics-grid">
+                  {project.metrics.map((metric, i) => (
+                    <div key={i} className="metric-item">
+                      <span className="metric-value">{metric.value}</span>
+                      <span className="metric-platform">{metric.platform}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(project.location || project.agency || project.campaignName) && (
+              <div className="portfolio-detail-meta-block">
+                {project.location && (
+                  <div className="detail-row">
+                    <span className="detail-label">Location</span>
+                    <span className="detail-value">{project.location}</span>
                   </div>
-                ))}
+                )}
+                {project.agency && (
+                  <div className="detail-row">
+                    <span className="detail-label">Agency</span>
+                    <span className="detail-value">{project.agency}</span>
+                  </div>
+                )}
+                {project.campaignName && (
+                  <div className="detail-row">
+                    <span className="detail-label">Campaign</span>
+                    <span className="detail-value">{project.campaignName}</span>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-
-          {(project.location || project.agency || project.campaignName) && (
-            <div className="portfolio-detail-info">
-              <h3>Details</h3>
-              {project.location && <p><strong>Location:</strong> {project.location}</p>}
-              {project.agency && <p><strong>Agency:</strong> {project.agency}</p>}
-              {project.campaignName && <p><strong>Campaign:</strong> {project.campaignName}</p>}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {project.supportingMedia?.length > 0 && (
         <div className="portfolio-detail-gallery">
-          <h2>Gallery</h2>
-          <div className="gallery-grid">
+          <div className="gallery-masonry">
             {project.supportingMedia.map((media, i) => (
               <div key={i} className="gallery-item">
                 {media._type === 'image' ? (
-                  <img src={urlFor(media).width(600).url()} alt={media.alt || `Gallery image ${i + 1}`} />
+                  <img src={urlFor(media).width(900).url()} alt={media.alt || `Gallery image ${i + 1}`} />
                 ) : (
                   <video src={media.url} controls />
                 )}

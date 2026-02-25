@@ -1,40 +1,285 @@
+/* ─── Page Shell ─────────────────────────────────────────────────────── */
 .portfolio-detail-page {
   min-height: 100vh;
-  padding: 120px 2rem 4rem;
-  max-width: 1400px;
-  margin: 0 auto;
+  background: #FDFDFD;
+}
+
+/* ─── Top nav ─────────────────────────────────────────────────────────── */
+.portfolio-detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 2.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .back-button {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 1px 0 rgba(0, 0, 0, 0.04);
-  padding: 0.8rem 1.5rem;
+  background: none;
+  border: none;
+  padding: 0;
   font-family: 'Cooper Hewitt', sans-serif;
   font-weight: 600;
-  font-size: 0.95rem;
-  color: rgba(0, 0, 0, 0.85);
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  border-radius: 30px;
-  transition: all 0.25s ease;
-  margin-bottom: 2.5rem;
+  letter-spacing: 0.5px;
+  transition: color 0.2s ease;
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    -1px 0 0 rgba(255, 100, 100, 0.04),
-    1px 0 0 rgba(100, 100, 255, 0.04);
-  transform: translateY(-2px);
+  color: #000;
 }
 
+.portfolio-detail-category {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.5);
+  padding: 0.35rem 1rem;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+}
+
+/* ─── Main split ──────────────────────────────────────────────────────── */
+.portfolio-detail-main {
+  display: grid;
+  grid-template-columns: 35% 65%;
+  min-height: calc(100vh - 56px);
+}
+
+/* Portrait: narrow image */
+.portfolio-detail-main[data-aspect="portrait"] {
+  grid-template-columns: 35% 65%;
+}
+
+/* Square */
+.portfolio-detail-main[data-aspect="square"] {
+  grid-template-columns: 45% 55%;
+}
+
+/* Landscape: wider image */
+.portfolio-detail-main[data-aspect="landscape"] {
+  grid-template-columns: 55% 45%;
+}
+
+/* Video defaults to landscape feel */
+.portfolio-detail-main:not([data-aspect]) {
+  grid-template-columns: 50% 50%;
+}
+
+/* Image side */
+.portfolio-detail-hero-image {
+  overflow: hidden;
+  background: #f0f0f0;
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 56px);
+}
+
+.portfolio-detail-hero-image img,
+.portfolio-detail-hero-image video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.portfolio-detail-hero-image.hero-loaded img,
+.portfolio-detail-hero-image.hero-loaded video {
+  opacity: 1;
+}
+
+/* Info side */
+.portfolio-detail-hero-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem 3rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  min-height: calc(100vh - 56px);
+}
+
+.portfolio-detail-hero-info-top {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.portfolio-detail-hero-info-top h1 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+  color: #0a0a0a;
+  margin: 0 0 0.6rem;
+}
+
+.portfolio-detail-role-inline {
+  font-size: 0.88rem;
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 500;
+  margin: 0;
+}
+
+.portfolio-detail-hero-info-body {
+  flex: 1;
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.portfolio-detail-desc-text {
+  line-height: 1.85;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.role-desc {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 0.88rem;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.portfolio-detail-hero-info-meta {
+  padding-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+/* ─── Meta blocks ─────────────────────────────────────────────────────── */
+.portfolio-detail-meta-block h3 {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(0, 0, 0, 0.3);
+  margin: 0 0 0.8rem;
+}
+
+/* Skills */
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.skill-tag {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.65);
+  font-weight: 600;
+}
+
+/* Metrics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.5rem;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 0.8rem 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 10px;
+}
+
+.metric-value {
+  display: block;
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #000;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.metric-platform {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.4);
+  text-transform: capitalize;
+}
+
+/* Details rows */
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detail-row:first-child {
+  padding-top: 0;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.detail-value {
+  font-size: 0.88rem;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: right;
+}
+
+/* ─── Gallery ─────────────────────────────────────────────────────────── */
+.portfolio-detail-gallery {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2.5rem 2.5rem 4rem;
+}
+
+.gallery-masonry {
+  column-count: 3;
+  column-gap: 0.75rem;
+}
+
+.gallery-item {
+  break-inside: avoid;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+}
+
+.gallery-item:hover {
+  transform: scale(1.01);
+}
+
+.gallery-item img,
+.gallery-item video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ─── Loading / error ─────────────────────────────────────────────────── */
 .portfolio-detail-loading,
 .portfolio-detail-error {
   text-align: center;
@@ -60,258 +305,55 @@
   margin-top: 1rem;
 }
 
-.portfolio-detail-header {
-  text-align: center;
-  margin-bottom: 3rem;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border-radius: 24px;
-  padding: 3rem 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 1px 0 rgba(0, 0, 0, 0.03);
-}
+/* ─── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .portfolio-detail-topbar {
+    padding: 1.2rem 1.5rem;
+  }
 
-.portfolio-detail-category {
-  display: inline-block;
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  padding: 0.6rem 1.4rem;
-  border-radius: 25px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.portfolio-detail-header h1 {
-  font-family: 'Cooper Hewitt', sans-serif;
-  font-weight: 700;
-  font-size: clamp(2rem, 5vw, 4rem);
-  margin: 0 0 1.5rem;
-  letter-spacing: 1px;
-}
-
-.portfolio-detail-logos {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.portfolio-detail-logos img {
-  max-height: 50px;
-  max-width: 120px;
-  object-fit: contain;
-}
-
-.portfolio-detail-media {
-  width: 100%;
-  margin-bottom: 4rem;
-  border-radius: 24px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 16px 48px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  padding: 8px;
-}
-
-.portfolio-detail-media img,
-.portfolio-detail-media video {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.portfolio-detail-content {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 3rem;
-  margin-bottom: 4rem;
-}
-
-@media (max-width: 768px) {
-  .portfolio-detail-content {
+  .portfolio-detail-hero-split {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    min-height: auto;
+  }
+
+  .portfolio-detail-hero-image {
+    height: 55vw;
+    min-height: 260px;
+  }
+
+  .portfolio-detail-hero-info {
+    border-left: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 2rem 1.5rem;
+  }
+
+  .portfolio-detail-gallery {
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .gallery-masonry {
+    column-count: 2;
   }
 }
 
-.portfolio-detail-description,
-.portfolio-detail-role,
-.portfolio-detail-skills,
-.portfolio-detail-metrics,
-.portfolio-detail-info {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border-radius: 20px;
-  padding: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 6px 24px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 1px 0 rgba(0, 0, 0, 0.03);
-}
+@media (max-width: 540px) {
+  .portfolio-detail-topbar {
+    padding: 1rem;
+  }
 
-.portfolio-detail-description h2,
-.portfolio-detail-meta h3 {
-  font-family: 'Cooper Hewitt', sans-serif;
-  font-weight: 700;
-  font-size: 1.3rem;
-  margin: 0 0 1.2rem;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: rgba(0, 0, 0, 0.9);
-}
+  .portfolio-detail-hero-image {
+    height: 70vw;
+  }
 
-.portfolio-detail-description p {
-  line-height: 1.9;
-  color: rgba(0, 0, 0, 0.75);
-  font-size: 1.05rem;
-  margin: 0;
-}
+  .portfolio-detail-hero-info {
+    padding: 1.5rem 1rem;
+  }
 
-.portfolio-detail-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
+  .portfolio-detail-gallery {
+    padding: 1.5rem 1rem 3rem;
+  }
 
-.portfolio-detail-role .role-title {
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin: 0 0 0.5rem;
-}
-
-.portfolio-detail-role .role-desc {
-  color: #666;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.skills-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.skill-tag {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  padding: 0.6rem 1.1rem;
-  border-radius: 25px;
-  font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.8);
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 1rem;
-}
-
-.metric-item {
-  text-align: center;
-  padding: 1.5rem 1rem;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.metric-value {
-  display: block;
-  font-family: 'Cooper Hewitt', sans-serif;
-  font-weight: 700;
-  font-size: 2rem;
-  color: #000;
-  margin-bottom: 0.5rem;
-}
-
-.metric-platform {
-  display: block;
-  font-size: 0.85rem;
-  color: #666;
-  text-transform: capitalize;
-}
-
-.portfolio-detail-info p {
-  margin: 0 0 0.5rem;
-  color: #333;
-  line-height: 1.6;
-}
-
-.portfolio-detail-gallery {
-  margin-top: 4rem;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border-radius: 24px;
-  padding: 3rem 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-.portfolio-detail-gallery h2 {
-  font-family: 'Cooper Hewitt', sans-serif;
-  font-weight: 700;
-  font-size: 2rem;
-  text-align: center;
-  margin-bottom: 2rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.gallery-item {
-  aspect-ratio: 1;
-  border-radius: 20px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 6px 24px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  padding: 6px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.gallery-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 
-    0 12px 36px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    -1px 0 0 rgba(255, 100, 100, 0.03),
-    1px 0 0 rgba(100, 100, 255, 0.03);
-}
-
-.gallery-item img,
-.gallery-item video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 16px;
+  .gallery-masonry {
+    column-count: 1;
+  }
 }

@@ -1,0 +1,118 @@
+/* ─── Services Page ───────────────────────────────────────────────────── */
+.services-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: #FDFDFD;
+  padding: 120px 0 80px;
+}
+
+.services-inner {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  min-height: 60vh;
+}
+
+/* ─── Services list ───────────────────────────────────────────────────── */
+.services-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.services-item {
+  padding: 2.2rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: default;
+  transition: padding-left 0.3s ease;
+}
+
+.services-item:first-child {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.services-item.active {
+  padding-left: 1rem;
+}
+
+.services-item-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.services-number {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  transition: color 0.3s ease;
+}
+
+.services-item.active .services-number {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.services-title {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.85rem, 1.1vw, 1rem);
+  letter-spacing: 1.5px;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.services-item.active .services-title {
+  color: #000;
+}
+
+.services-description {
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0;
+  max-width: 560px;
+  text-align: justify;
+  transition: color 0.3s ease;
+}
+
+.services-item.active .services-description {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+/* ─── Tagline ─────────────────────────────────────────────────────────── */
+.services-tagline {
+  margin-top: 3rem;
+  text-align: right;
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.35);
+  font-style: italic;
+  letter-spacing: 0.2px;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .services-page {
+    padding: 100px 0 60px;
+    align-items: flex-start;
+  }
+
+  .services-inner {
+    padding: 0 1.2rem;
+  }
+
+  .services-item.active {
+    padding-left: 0.5rem;
+  }
+}

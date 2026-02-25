@@ -83,14 +83,14 @@ class BackgroundAnimation {
         this.scrollSpeed = 0.08; // How fast scroll catches up (lower = slower, smoother)
         this.isScrollControlActive = true;
         
-        // Color adjustment parameters
+        // Color adjustment parameters (hardcoded final values)
         this.colorParams = {
-            brightness: 1.0,
-            saturation: 1.0,
-            vibrance: 0.0,
-            contrast: 1.0,
-            whiteBalance: 0.0,
-            warmth: 0.0
+            brightness: 1.04,
+            saturation: 0.68,
+            vibrance: 0,
+            contrast: 1.32,
+            whiteBalance: 0.27,
+            warmth: 0.22
         };
 
         // Remove text scatter - no longer needed
@@ -102,8 +102,6 @@ class BackgroundAnimation {
         this.camera.position.copy(this.initialCameraPosition);
         this.camera.lookAt(0, 0, 0);
 
-        // Set up color editing GUI
-        this.setupColorGUI();
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
 
@@ -220,57 +218,6 @@ class BackgroundAnimation {
     //  COLOR EDITING GUI
     // --------------------------------------------------
     
-    setupColorGUI() {
-        if (typeof dat === 'undefined') {
-            console.warn('dat.GUI not loaded, color controls unavailable');
-            return;
-        }
-        
-        const gui = new dat.GUI();
-        gui.domElement.style.position = 'fixed';
-        gui.domElement.style.top = '80px';
-        gui.domElement.style.right = '20px';
-        gui.domElement.style.zIndex = '999999';
-        gui.domElement.style.pointerEvents = 'auto';
-        
-        // Ensure all child elements also have pointer events
-        const style = document.createElement('style');
-        style.textContent = `
-            .dg.ac { pointer-events: auto !important; z-index: 999999 !important; }
-            .dg.ac * { pointer-events: auto !important; }
-        `;
-        document.head.appendChild(style);
-        
-        const colorFolder = gui.addFolder('Flower Colors');
-        
-        colorFolder.add(this.colorParams, 'brightness', 0.1, 3.0).step(0.01).name('Brightness').onChange(() => {
-            this.applyColorTransform();
-        });
-        
-        colorFolder.add(this.colorParams, 'saturation', 0.0, 3.0).step(0.01).name('Saturation').onChange(() => {
-            this.applyColorTransform();
-        });
-        
-        colorFolder.add(this.colorParams, 'vibrance', -1.0, 3.0).step(0.01).name('Vibrance').onChange(() => {
-            this.applyColorTransform();
-        });
-        
-        colorFolder.add(this.colorParams, 'contrast', 0.5, 2.0).step(0.01).name('Contrast').onChange(() => {
-            this.applyColorTransform();
-        });
-        
-        colorFolder.add(this.colorParams, 'whiteBalance', -1.0, 1.0).step(0.01).name('White Balance').onChange(() => {
-            this.applyColorTransform();
-        });
-        
-        colorFolder.add(this.colorParams, 'warmth', -1.0, 1.0).step(0.01).name('Warmth').onChange(() => {
-            this.applyColorTransform();
-        });
-        
-        colorFolder.open();
-        
-        this.gui = gui;
-    }
     
     applyColorTransform() {
         if (!this.baseColors || !this.model) return;
@@ -1075,6 +1022,11 @@ class BackgroundAnimation {
                 });
 
                 this.model = new THREE.Points(bufferGeometry, material);
+
+                // Apply hardcoded color params now that model exists
+                this.applyColorTransform();
+                // Update originalColors to transformed values so scroll animations use correct base
+                this.originalColors = new Float32Array(bufferGeometry.attributes.color.array);
 
                 bufferGeometry.computeBoundingBox();
                 const box = bufferGeometry.boundingBox;

@@ -348,7 +348,7 @@ function Home() {
             transition: 'opacity 0.3s ease',
             filter: formationProgress < 1 ? `blur(${(1 - formationProgress) * 8}px)` : 'none'
           }}>
-            <InfiniteMenu key={menuKey} items={items} scale={3} formationProgress={formationProgress} />
+            <InfiniteMenu key={menuKey} items={items} scale={3} formationProgress={formationProgress} menuVisible={menuVisible} />
           </div>
         </section>
       )}

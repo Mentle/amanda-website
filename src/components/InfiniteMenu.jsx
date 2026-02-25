@@ -1117,7 +1117,7 @@ const defaultItems = [
   }
 ];
 
-export default function InfiniteMenu({ items = [], scale = 1.0, formationProgress = 1.0 }) {
+export default function InfiniteMenu({ items = [], scale = 1.0, formationProgress = 1.0, menuVisible = true }) {
   const canvasRef = useRef(null);
   const sketchRef = useRef(null);
   const [activeItem, setActiveItem] = useState(null);
@@ -1171,7 +1171,7 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
   }, [formationProgress]);
 
   const handleButtonClick = () => {
-    if (!activeItem?.link) return;
+    if (!activeItem?.link || !menuVisible) return;
     
     // Save state before navigating
     if (sketchRef.current) {
@@ -1189,7 +1189,7 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <canvas id="infinite-grid-menu-canvas" ref={canvasRef} />
 
-      {activeItem && (
+      {activeItem && menuVisible && (
         <div onClick={handleButtonClick} className={`action-button ${isMoving ? 'inactive' : 'active'}`}>
           <div className="action-button-content">
             <h3 className="action-button-title">{activeItem.title}</h3>
