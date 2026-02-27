@@ -48,6 +48,10 @@
     border-radius: var(--scrollbar-width);
 }
 
+html {
+    font-size: 13px;
+}
+
 body {
     font-family: 'Cooper Hewitt', sans-serif;
     color: var(--text-color);
