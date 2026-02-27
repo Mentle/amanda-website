@@ -29,6 +29,11 @@ class BackgroundAnimation {
         this.prevMouse = new THREE.Vector2(0, 0);
         this.mouseVelocity = new THREE.Vector2(0, 0);
         
+        // Auto-rotation when idle
+        this.lastMouseMoveTime = Date.now();
+        this.idleThreshold = 2000; // 2 seconds of no mouse movement before auto-rotating
+        this.autoRotationSpeed = 0.0008; // Smooth rotation speed
+        
         // Check if on mobile device and disable interaction by default on mobile
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         this.disableMouseInteraction = this.isMobile; // Disabled by default on mobile
@@ -360,6 +365,9 @@ class BackgroundAnimation {
     }
 
     onMouseMove(event) {
+        // Track mouse movement for idle detection
+        this.lastMouseMoveTime = Date.now();
+        
         // Convert mouse position to normalized device coordinates
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -406,6 +414,7 @@ class BackgroundAnimation {
 
     setActive(isActive) {
         this.isActive = isActive;
+        this.isScrollControlActive = isActive;
         
         // Clean up scroll effects when becoming inactive
         if (!isActive) {
@@ -420,6 +429,9 @@ class BackgroundAnimation {
             this.opacityProgress = 0;
             this.particleGrowthScale = 1.0;
         } else {
+            // Sync scroll positions when re-activating to prevent jumps
+            this.currentScroll = window.pageYOffset;
+            this.targetScroll = window.pageYOffset;
             // When becoming active again, trigger scroll handler to sync state
             this.handleScroll();
         }
@@ -692,6 +704,15 @@ class BackgroundAnimation {
 
         // Further smooth rotation if not fully dissolved and particles not expanding
         if (this.model && this.disperseProgress < 1 && this.expansionProgress < 0.1) {
+            // Check if idle (no mouse movement for threshold time)
+            const timeSinceLastMove = Date.now() - this.lastMouseMoveTime;
+            const isIdle = timeSinceLastMove > this.idleThreshold;
+            
+            // Apply auto-rotation when idle
+            if (isIdle && !this.disableMouseInteraction) {
+                this.targetRotation.y += this.autoRotationSpeed;
+            }
+            
             this.modelRotation.x += (this.targetRotation.x - this.modelRotation.x) * 0.05;
             this.modelRotation.y += (this.targetRotation.y - this.modelRotation.y) * 0.05;
             this.model.rotation.set(

@@ -8,7 +8,7 @@ function About() {
         <div className="about-image-wrap">
           <img src="/images/profile.webp" alt="Amanda Michelena" />
         </div>
-        <p className="about-location">Based in Spain — working globally.</p>
+        <p className="about-location">Based between London and Barcelona — working globally.</p>
       </div>
 
       <div className="about-text-col">
