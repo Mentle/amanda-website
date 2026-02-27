@@ -244,6 +244,17 @@ const PillNav = ({
     }
   };
 
+  const handlePageNavigation = (href) => {
+    return (e) => {
+      // Scroll to top when navigating to Services or About
+      if (href === '/services' || href === '/about') {
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+        }, 0);
+      }
+    };
+  };
+
   const isExternalLink = href =>
     href.startsWith('http://') ||
     href.startsWith('https://') ||
@@ -326,6 +337,7 @@ const PillNav = ({
                     aria-label={item.ariaLabel || item.label}
                     onMouseEnter={() => handleEnter(i)}
                     onMouseLeave={() => handleLeave(i)}
+                    onClick={handlePageNavigation(item.href)}
                   >
                     <span
                       className="hover-circle"
@@ -390,7 +402,12 @@ const PillNav = ({
                 <Link
                   to={item.href}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    if (isMobileMenuOpen) {
+                      toggleMobileMenu();
+                    }
+                    handlePageNavigation(item.href)(e);
+                  }}
                 >
                   {item.label}
                 </Link>
@@ -399,10 +416,12 @@ const PillNav = ({
                   href={item.href}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
                   onClick={(e) => {
+                    if (isMobileMenuOpen) {
+                      toggleMobileMenu();
+                    }
                     if (item.href === '#portfolio') {
                       handlePortfolioScroll(e);
                     }
-                    setIsMobileMenuOpen(false);
                   }}
                 >
                   {item.label}

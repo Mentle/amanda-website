@@ -5,6 +5,9 @@
   overflow: hidden;
   position: relative;
   outline: none;
+  z-index: 1;
+  pointer-events: auto;
+  touch-action: none;
 }
 
 #infinite-grid-menu-canvas:active {

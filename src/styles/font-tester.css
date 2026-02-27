@@ -1,0 +1,183 @@
+/* Font Tester Panel */
+.font-tester-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.font-tester-toggle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.font-tester-toggle:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.font-tester-panel {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  width: 280px;
+  padding: 0;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.font-tester-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.font-tester-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #000;
+}
+
+.font-tester-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.5);
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.font-tester-close:hover {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.font-tester-content {
+  padding: 1rem;
+}
+
+.font-tester-group {
+  margin-bottom: 1rem;
+}
+
+.font-tester-group:last-of-type {
+  margin-bottom: 0.75rem;
+}
+
+.font-tester-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.font-tester-select {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: #f9f9f9;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.font-tester-select:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: #fff;
+}
+
+.font-tester-select:focus {
+  outline: none;
+  border-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.font-tester-preview {
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 0.75rem;
+}
+
+.preview-label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .font-tester-container {
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  .font-tester-toggle {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+
+  .font-tester-panel {
+    width: 260px;
+  }
+}
+
+@media (max-width: 540px) {
+  .font-tester-container {
+    bottom: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .font-tester-toggle {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .font-tester-panel {
+    width: 240px;
+    bottom: 55px;
+  }
+}

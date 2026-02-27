@@ -41,11 +41,15 @@ function Home() {
     if (value === activeFilter) return
     setMenuVisible(false)
     if (filterTransitionRef.current) clearTimeout(filterTransitionRef.current)
+    // Update filter when fade is complete (300ms)
     filterTransitionRef.current = setTimeout(() => {
       setActiveFilter(value)
       setMenuKey(value)
-      setMenuVisible(true)
     }, 300)
+    // Fade back in after render completes (wait longer for InfiniteMenu to fully mount)
+    filterTransitionRef.current = setTimeout(() => {
+      setMenuVisible(true)
+    }, 500)
   }, [activeFilter])
 
   // Use layoutEffect to set scroll position BEFORE paint (prevents flash of orchid)
@@ -346,7 +350,8 @@ function Home() {
             position: 'relative', 
             opacity: menuVisible ? 1 : 0, 
             transition: 'opacity 0.3s ease',
-            filter: formationProgress < 1 ? `blur(${(1 - formationProgress) * 8}px)` : 'none'
+            filter: formationProgress < 1 ? `blur(${(1 - formationProgress) * 8}px)` : 'none',
+            pointerEvents: formationProgress < 1 ? 'none' : 'auto'
           }}>
             <InfiniteMenu key={menuKey} items={items} scale={3} formationProgress={formationProgress} menuVisible={menuVisible} />
           </div>

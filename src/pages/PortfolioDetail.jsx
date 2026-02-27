@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
@@ -19,6 +19,8 @@ function PortfolioDetail() {
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [heroLoaded, setHeroLoaded] = useState(false)
+  const [imageColumnWidth, setImageColumnWidth] = useState('35%')
+  const infoRef = useRef(null)
 
   const getImageAspect = (project) => {
     // Parse dimensions from Sanity _ref: "image-xxxx-WxH-ext"
@@ -41,7 +43,6 @@ function PortfolioDetail() {
         projectDescription,
         role,
         roleDescription,
-        skills,
         metrics,
         location,
         campaignName,
@@ -54,14 +55,6 @@ function PortfolioDetail() {
             hotspot
           },
           "videoUrl": video.asset->url
-        },
-        "supportingMedia": supportingMedia[]{
-          _type,
-          asset,
-          crop,
-          hotspot,
-          alt,
-          "url": asset->url
         },
         order,
         featured
@@ -88,6 +81,43 @@ function PortfolioDetail() {
     }
     return labels[category] || category
   }
+
+  // Dynamic column sizing based on image aspect ratio to fill full height
+  useEffect(() => {
+    if (!project || !heroLoaded) return
+
+    const calculateOptimalWidth = () => {
+      const viewportHeight = window.innerHeight - 56 // minus topbar
+      const ref = project?.mainMedia?.image?.asset?._ref || ''
+      const match = ref.match(/-([0-9]+)x([0-9]+)-/)
+      
+      if (!match) {
+        setImageColumnWidth('40%') // fallback for videos
+        return
+      }
+      
+      const imageWidth = parseInt(match[1])
+      const imageHeight = parseInt(match[2])
+      const imageAspect = imageWidth / imageHeight
+      
+      // Calculate width needed to fill full height at this aspect ratio
+      const optimalWidth = viewportHeight * imageAspect
+      const viewportWidth = window.innerWidth
+      
+      // Convert to percentage of viewport width
+      let proportion = (optimalWidth / viewportWidth)
+      
+      // Clamp to reasonable bounds (20% - 60%)
+      proportion = Math.max(0.20, Math.min(0.60, proportion))
+      
+      setImageColumnWidth(`${Math.round(proportion * 100)}%`)
+    }
+
+    calculateOptimalWidth()
+    window.addEventListener('resize', calculateOptimalWidth)
+    
+    return () => window.removeEventListener('resize', calculateOptimalWidth)
+  }, [project, heroLoaded])
 
   if (loading) {
     return (
@@ -118,31 +148,102 @@ function PortfolioDetail() {
       </div>
 
       {/* Hero + info */}
-      <div className="portfolio-detail-main" data-aspect={getImageAspect(project)}>
-        <div className={`portfolio-detail-hero-image ${heroLoaded ? 'hero-loaded' : ''}`}>
-          {project.mainMedia?.mediaType === 'video' && project.mainMedia?.videoUrl ? (
-            <video
-              src={project.mainMedia.videoUrl}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              onCanPlay={() => setHeroLoaded(true)}
-            />
-          ) : project.mainMedia?.image ? (
-            <img
-              src={urlFor(project.mainMedia.image).width(1200).format('webp').quality(85).url()}
-              alt={project.title}
-              onLoad={() => setHeroLoaded(true)}
-            />
-          ) : null}
+      <div 
+        className="portfolio-detail-main" 
+        data-aspect={getImageAspect(project)}
+        style={{ gridTemplateColumns: `${imageColumnWidth} auto` }}
+      >
+        {/* Desktop: side-by-side layout */}
+        <div className="portfolio-detail-desktop-layout">
+          <div className={`portfolio-detail-hero-image ${heroLoaded ? 'hero-loaded' : ''}`}>
+            {project.mainMedia?.mediaType === 'video' && project.mainMedia?.videoUrl ? (
+              <video
+                src={project.mainMedia.videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onCanPlay={() => setHeroLoaded(true)}
+              />
+            ) : project.mainMedia?.image ? (
+              <img
+                src={urlFor(project.mainMedia.image).width(1200).format('webp').quality(85).url()}
+                alt={project.title}
+                onLoad={() => setHeroLoaded(true)}
+              />
+            ) : null}
+          </div>
+
+          <div className="portfolio-detail-hero-info" ref={infoRef}>
+            <div className="portfolio-detail-hero-info-top">
+              <h1>{project.title}</h1>
+              <p className="portfolio-detail-role-inline">{project.role}</p>
+            </div>
+
+            <div className="portfolio-detail-hero-info-body">
+              <p className="portfolio-detail-desc-text">{project.projectDescription}</p>
+              {project.roleDescription && <p className="role-desc">{project.roleDescription}</p>}
+            </div>
+
+            <div className="portfolio-detail-hero-info-meta">
+              {(project.metrics?.length > 0 || project.location || project.agency || project.campaignName) && (
+                <div className="portfolio-detail-meta-block">
+                  {project.metrics?.length > 0 && project.metrics.map((metric, i) => (
+                    <div key={i} className="detail-row">
+                      <span className="detail-label">{metric.platform}</span>
+                      <span className="detail-value">{metric.value}</span>
+                    </div>
+                  ))}
+                  {project.location && (
+                    <div className="detail-row">
+                      <span className="detail-label">Location</span>
+                      <span className="detail-value">{project.location}</span>
+                    </div>
+                  )}
+                  {project.agency && (
+                    <div className="detail-row">
+                      <span className="detail-label">Agency</span>
+                      <span className="detail-value">{project.agency}</span>
+                    </div>
+                  )}
+                  {project.campaignName && (
+                    <div className="detail-row">
+                      <span className="detail-label">Campaign</span>
+                      <span className="detail-value">{project.campaignName}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="portfolio-detail-hero-info">
+        {/* Mobile: hero between top and body */}
+        <div className="portfolio-detail-mobile-layout">
           <div className="portfolio-detail-hero-info-top">
             <h1>{project.title}</h1>
             <p className="portfolio-detail-role-inline">{project.role}</p>
+          </div>
+
+          <div className={`portfolio-detail-hero-image ${heroLoaded ? 'hero-loaded' : ''}`}>
+            {project.mainMedia?.mediaType === 'video' && project.mainMedia?.videoUrl ? (
+              <video
+                src={project.mainMedia.videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onCanPlay={() => setHeroLoaded(true)}
+              />
+            ) : project.mainMedia?.image ? (
+              <img
+                src={urlFor(project.mainMedia.image).width(1200).format('webp').quality(85).url()}
+                alt={project.title}
+                onLoad={() => setHeroLoaded(true)}
+              />
+            ) : null}
           </div>
 
           <div className="portfolio-detail-hero-info-body">
@@ -151,33 +252,14 @@ function PortfolioDetail() {
           </div>
 
           <div className="portfolio-detail-hero-info-meta">
-            {project.skills?.length > 0 && (
+            {(project.metrics?.length > 0 || project.location || project.agency || project.campaignName) && (
               <div className="portfolio-detail-meta-block">
-                <h3>Skills & Tools</h3>
-                <div className="skills-tags">
-                  {project.skills.map((skill, i) => (
-                    <span key={i} className="skill-tag">{skill}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {project.metrics?.length > 0 && (
-              <div className="portfolio-detail-meta-block">
-                <h3>Results</h3>
-                <div className="metrics-grid">
-                  {project.metrics.map((metric, i) => (
-                    <div key={i} className="metric-item">
-                      <span className="metric-value">{metric.value}</span>
-                      <span className="metric-platform">{metric.platform}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {(project.location || project.agency || project.campaignName) && (
-              <div className="portfolio-detail-meta-block">
+                {project.metrics?.length > 0 && project.metrics.map((metric, i) => (
+                  <div key={i} className="detail-row">
+                    <span className="detail-label">{metric.platform}</span>
+                    <span className="detail-value">{metric.value}</span>
+                  </div>
+                ))}
                 {project.location && (
                   <div className="detail-row">
                     <span className="detail-label">Location</span>
@@ -202,22 +284,7 @@ function PortfolioDetail() {
         </div>
       </div>
 
-      {project.supportingMedia?.length > 0 && (
-        <div className="portfolio-detail-gallery">
-          <div className="gallery-masonry">
-            {project.supportingMedia.map((media, i) => (
-              <div key={i} className="gallery-item">
-                {media._type === 'image' ? (
-                  <img src={urlFor(media).width(900).url()} alt={media.alt || `Gallery image ${i + 1}`} />
-                ) : (
-                  <video src={media.url} controls />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
   )
 }
 

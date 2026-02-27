@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import LoadingScreen from './components/LoadingScreen'
 import Background from './components/Background'
 import PillNav from './components/PillNav'
+import Footer from './components/Footer'
+import FontTester from './components/FontTester'
 import PasswordGate from './components/PasswordGate'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -77,11 +79,12 @@ function App() {
           pillTextColor="#000000"
           initialLoadAnimation={false}
         />
+        <FontTester />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/about" element={<><About /><Footer /></>} />
           <Route path="/work/:slug" element={<PortfolioDetail />} />
-          <Route path="/services" element={<Contact />} />
+          <Route path="/services" element={<><Contact /><Footer /></>} />
         </Routes>
       </div>
     </PasswordGate>

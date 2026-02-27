@@ -55,13 +55,6 @@ export default {
       description: 'Detailed description of your role and responsibilities'
     },
     {
-      name: 'skills',
-      title: 'Skills & Tools Used',
-      type: 'array',
-      of: [{type: 'string'}],
-      description: 'Add individual skills and tools (e.g., "Visual Direction", "Adobe Suite", "ChatGPT")'
-    },
-    {
       name: 'metrics',
       title: 'Metrics',
       type: 'array',
@@ -180,46 +173,6 @@ export default {
       validation: Rule => Rule.required()
     },
     {
-      name: 'supportingMedia',
-      title: 'Supporting Images/Videos/GIFs',
-      type: 'array',
-      of: [
-        {
-          type: 'image',
-          options: {
-            hotspot: true,
-          },
-          fields: [
-            {
-              name: 'alt',
-              title: 'Alt Text',
-              type: 'string',
-            }
-          ]
-        },
-        {
-          type: 'file',
-          options: {
-            accept: 'video/*,image/gif'
-          }
-        }
-      ]
-    },
-    {
-      name: 'order',
-      title: 'Display Order',
-      type: 'number',
-      description: 'Lower numbers appear first',
-      validation: Rule => Rule.required().min(0)
-    },
-    {
-      name: 'featured',
-      title: 'Featured Project',
-      type: 'boolean',
-      description: 'Show this project prominently',
-      initialValue: false
-    },
-    {
       name: 'published',
       title: 'Published',
       type: 'boolean',
@@ -242,21 +195,5 @@ export default {
         media: mainImage
       }
     }
-  },
-  orderings: [
-    {
-      title: 'Display Order',
-      name: 'orderAsc',
-      by: [
-        {field: 'order', direction: 'asc'}
-      ]
-    },
-    {
-      title: 'Year (Newest First)',
-      name: 'yearDesc',
-      by: [
-        {field: 'year', direction: 'desc'}
-      ]
-    }
-  ]
+  }
 }

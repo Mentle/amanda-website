@@ -81,7 +81,8 @@ class BackgroundAnimation {
         this.targetScroll = 0;
         this.currentScroll = 0;
         this.scrollSpeed = 0.08; // How fast scroll catches up (lower = slower, smoother)
-        this.isScrollControlActive = true;
+        // Only enable scroll damping on homepage
+        this.isScrollControlActive = window.location.pathname === '/';
         
         // Color adjustment parameters (hardcoded final values)
         this.colorParams = {

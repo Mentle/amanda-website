@@ -68,10 +68,11 @@ in vec3 aModelPosition;
 in vec3 aModelNormal;
 in vec2 aModelUvs;
 in mat4 aInstanceMatrix;
+in float aItemIndex;
 
 out vec2 vUvs;
 out float vAlpha;
-flat out int vInstanceId;
+flat out int vItemIndex;
 
 #define PI 3.141593
 
@@ -98,7 +99,7 @@ void main() {
 
     vAlpha = smoothstep(0.5, 1., normalize(worldPosition.xyz).z) * .9 + .1;
     vUvs = aModelUvs;
-    vInstanceId = gl_InstanceID;
+    vItemIndex = int(aItemIndex);
 }
 `;
 
@@ -113,10 +114,10 @@ out vec4 outColor;
 
 in vec2 vUvs;
 in float vAlpha;
-flat in int vInstanceId;
+flat in int vItemIndex;
 
 void main() {
-    int itemIndex = vInstanceId % uItemCount;
+    int itemIndex = vItemIndex;
     int cellsPerRow = uAtlasSize;
     int cellX = itemIndex % cellsPerRow;
     int cellY = itemIndex / cellsPerRow;
@@ -664,6 +665,8 @@ class InfiniteGridMenu {
   }
 
   resize() {
+    if (this.disposed || !this.gl) return;
+
     this.viewportSize = vec2.set(this.viewportSize || vec2.create(), this.canvas.clientWidth, this.canvas.clientHeight);
 
     const gl = this.gl;
@@ -675,7 +678,15 @@ class InfiniteGridMenu {
     this.#updateProjectionMatrix(gl);
   }
 
+  disposed = false;
+  _rafId = null;
+
   run(time = 0) {
+    if (this.disposed) {
+      this._rafId = null;
+      return;
+    }
+
     this.#deltaTime = Math.min(32, time - this.#time);
     this.#time = time;
     this.#deltaFrames = this.#deltaTime / this.TARGET_FRAME_DURATION;
@@ -687,7 +698,60 @@ class InfiniteGridMenu {
       this.#render();
     }
 
-    requestAnimationFrame(t => this.run(t));
+    this._rafId = requestAnimationFrame(t => this.run(t));
+  }
+
+  dispose() {
+    this.disposed = true;
+
+    // Cancel any pending animation frame
+    if (this._rafId) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
+
+    // Defer actual cleanup — if React Strict Mode remounts immediately,
+    // cancelDispose() will prevent the context from being destroyed.
+    this._disposeTimer = setTimeout(() => {
+      this._fullCleanup();
+    }, 200);
+  }
+
+  _fullCleanup() {
+    const gl = this.gl;
+    if (!gl) return;
+
+    // Delete programs
+    if (this.discProgram) gl.deleteProgram(this.discProgram);
+
+    // Delete textures
+    if (this.tex) gl.deleteTexture(this.tex);
+
+    // Delete buffers
+    if (this.itemIndexBuffer) gl.deleteBuffer(this.itemIndexBuffer);
+
+    // Delete VAO
+    if (this.discVAO) gl.deleteVertexArray(this.discVAO);
+
+    // Lose the context explicitly to free the WebGL context slot
+    try {
+      const loseContext = gl.getExtension('WEBGL_lose_context');
+      if (loseContext) loseContext.loseContext();
+    } catch (e) { /* context may already be lost */ }
+
+    this.gl = null;
+  }
+
+  cancelDispose() {
+    if (this._disposeTimer) {
+      clearTimeout(this._disposeTimer);
+      this._disposeTimer = null;
+    }
+    this.disposed = false;
+    // Restart the single animation loop if it was cancelled
+    if (!this._rafId) {
+      this._rafId = requestAnimationFrame(t => this.run(t));
+    }
   }
 
   #init(onInit) {
@@ -704,13 +768,15 @@ class InfiniteGridMenu {
       aModelPosition: 0,
       aModelNormal: 1,
       aModelUvs: 2,
-      aInstanceMatrix: 3
+      aInstanceMatrix: 3,
+      aItemIndex: 7
     });
 
     this.discLocations = {
       aModelPosition: gl.getAttribLocation(this.discProgram, 'aModelPosition'),
       aModelUvs: gl.getAttribLocation(this.discProgram, 'aModelUvs'),
       aInstanceMatrix: gl.getAttribLocation(this.discProgram, 'aInstanceMatrix'),
+      aItemIndex: gl.getAttribLocation(this.discProgram, 'aItemIndex'),
       uWorldMatrix: gl.getUniformLocation(this.discProgram, 'uWorldMatrix'),
       uViewMatrix: gl.getUniformLocation(this.discProgram, 'uViewMatrix'),
       uProjectionMatrix: gl.getUniformLocation(this.discProgram, 'uProjectionMatrix'),
@@ -841,6 +907,70 @@ class InfiniteGridMenu {
     loadMedia();
   }
 
+  #buildItemMapping(discCount, itemCount) {
+    if (itemCount <= 0) return new Float32Array(discCount);
+    if (itemCount >= discCount) {
+      // More items than discs — just assign sequentially
+      return new Float32Array(Array.from({ length: discCount }, (_, i) => i % itemCount));
+    }
+
+    // Build adjacency from icosphere geometry for neighbor awareness
+    const positions = this.instancePositions;
+    const neighbors = Array.from({ length: discCount }, () => []);
+
+    // Find neighbors: vertices within a threshold distance on the sphere
+    const threshold = this.SPHERE_RADIUS * 0.75;
+    for (let i = 0; i < discCount; i++) {
+      for (let j = i + 1; j < discCount; j++) {
+        const dx = positions[i][0] - positions[j][0];
+        const dy = positions[i][1] - positions[j][1];
+        const dz = positions[i][2] - positions[j][2];
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist < threshold) {
+          neighbors[i].push(j);
+          neighbors[j].push(i);
+        }
+      }
+    }
+
+    // Greedy graph-coloring: assign items so no two neighbors share the same item
+    const mapping = new Int32Array(discCount).fill(-1);
+
+    // Sort vertices by number of neighbors descending (most constrained first)
+    const order = Array.from({ length: discCount }, (_, i) => i);
+    order.sort((a, b) => neighbors[b].length - neighbors[a].length);
+
+    for (const idx of order) {
+      // Collect items used by neighbors
+      const usedByNeighbors = new Set();
+      for (const n of neighbors[idx]) {
+        if (mapping[n] >= 0) usedByNeighbors.add(mapping[n]);
+      }
+
+      // Pick the first item not used by any neighbor
+      let chosen = -1;
+      for (let item = 0; item < itemCount; item++) {
+        if (!usedByNeighbors.has(item)) {
+          chosen = item;
+          break;
+        }
+      }
+
+      // If all items are used by neighbors (very few items), pick least-used neighbor item
+      if (chosen === -1) {
+        const counts = new Array(itemCount).fill(0);
+        for (const n of neighbors[idx]) {
+          if (mapping[n] >= 0) counts[mapping[n]]++;
+        }
+        chosen = counts.indexOf(Math.min(...counts));
+      }
+
+      mapping[idx] = chosen;
+    }
+
+    return new Float32Array(mapping);
+  }
+
   #initDiscInstances(count) {
     const gl = this.gl;
     this.discInstances = {
@@ -865,6 +995,20 @@ class InfiniteGridMenu {
       gl.vertexAttribDivisor(loc, 1);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    // Create item index mapping buffer for diversity
+    const itemCount = Math.max(1, this.items.length);
+    const itemMapping = this.#buildItemMapping(count, itemCount);
+    this.itemMapping = itemMapping; // Store for active item lookup
+    this.itemIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.itemIndexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, itemMapping, gl.STATIC_DRAW);
+    const itemLoc = this.discLocations.aItemIndex;
+    gl.enableVertexAttribArray(itemLoc);
+    gl.vertexAttribPointer(itemLoc, 1, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribDivisor(itemLoc, 1);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
     gl.bindVertexArray(null);
   }
 
@@ -1028,7 +1172,7 @@ class InfiniteGridMenu {
 
     if (!this.control.isPointerDown) {
       const nearestVertexIndex = this.#findNearestVertexIndex();
-      const itemIndex = nearestVertexIndex % Math.max(1, this.items.length);
+      const itemIndex = this.itemMapping ? this.itemMapping[nearestVertexIndex] : (nearestVertexIndex % Math.max(1, this.items.length));
       this.activeItemIndex = nearestVertexIndex;
       this.onActiveItemChange(itemIndex);
       const snapDirection = vec3.normalize(vec3.create(), this.#getVertexWorldPosition(nearestVertexIndex));
@@ -1096,8 +1240,9 @@ class InfiniteGridMenu {
       
       // Restore active item
       this.activeItemIndex = state.activeItemIndex;
-      if (state.activeItemIndex >= 0 && state.activeItemIndex < this.items.length) {
-        this.onActiveItemChange(state.activeItemIndex);
+      if (state.activeItemIndex >= 0) {
+        const itemIndex = this.itemMapping ? this.itemMapping[state.activeItemIndex] : (state.activeItemIndex % Math.max(1, this.items.length));
+        this.onActiveItemChange(itemIndex);
       }
       
       return true;
@@ -1118,6 +1263,7 @@ const defaultItems = [
 ];
 
 export default function InfiniteMenu({ items = [], scale = 1.0, formationProgress = 1.0, menuVisible = true }) {
+  const isFullyVisible = formationProgress > 0.9 && menuVisible;
   const canvasRef = useRef(null);
   const sketchRef = useRef(null);
   const [activeItem, setActiveItem] = useState(null);
@@ -1128,11 +1274,16 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
     const canvas = canvasRef.current;
 
     const handleActiveItem = index => {
-      const itemIndex = index % items.length;
-      setActiveItem(items[itemIndex]);
+      setActiveItem(items[index] || null);
     };
 
-    if (canvas && !sketchRef.current) {
+    // If a previous instance is being disposed (Strict Mode remount), cancel and reuse it
+    if (sketchRef.current) {
+      if (sketchRef.current.disposed) {
+        sketchRef.current.cancelDispose();
+      }
+      // Already have a valid instance, no need to create a new one
+    } else if (canvas) {
       sketchRef.current = new InfiniteGridMenu(
         canvas,
         items.length ? items : defaultItems,
@@ -1150,7 +1301,7 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
     }
 
     const handleResize = () => {
-      if (sketchRef.current) {
+      if (sketchRef.current && !sketchRef.current.disposed) {
         sketchRef.current.resize();
       }
     };
@@ -1160,6 +1311,9 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (sketchRef.current) {
+        sketchRef.current.dispose();
+      }
     };
   }, [items, scale]);
 
@@ -1187,9 +1341,13 @@ export default function InfiniteMenu({ items = [], scale = 1.0, formationProgres
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <canvas id="infinite-grid-menu-canvas" ref={canvasRef} />
+      <canvas 
+        id="infinite-grid-menu-canvas" 
+        ref={canvasRef}
+        style={{ pointerEvents: isFullyVisible ? 'auto' : 'none' }}
+      />
 
-      {activeItem && menuVisible && (
+      {activeItem && isFullyVisible && (
         <div onClick={handleButtonClick} className={`action-button ${isMoving ? 'inactive' : 'active'}`}>
           <div className="action-button-content">
             <h3 className="action-button-title">{activeItem.title}</h3>

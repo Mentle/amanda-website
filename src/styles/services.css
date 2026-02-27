@@ -19,6 +19,17 @@
   min-height: 60vh;
 }
 
+/* ─── Page title ──────────────────────────────────────────────────────── */
+.services-page-title {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #000;
+  margin: 0 0 2.5rem 0;
+  padding: 0;
+}
+
 /* ─── Services list ───────────────────────────────────────────────────── */
 .services-list {
   list-style: none;

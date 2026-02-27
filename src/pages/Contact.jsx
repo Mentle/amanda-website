@@ -25,6 +25,7 @@ function Contact() {
   return (
     <div className="services-page">
       <div className="services-inner">
+        <h1 className="services-page-title">Services</h1>
 
         <ul className="services-list">
           {services.map((s, i) => (
