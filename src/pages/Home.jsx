@@ -72,6 +72,7 @@ function Home() {
   const [formationProgress, setFormationProgress] = useState(0)
   const [heroTitle, setHeroTitle] = useState(() => cachedSiteSettings?.heroTitle || null)
   const [heroSubtitle, setHeroSubtitle] = useState(() => cachedSiteSettings?.heroSubtitle || null)
+  const [scrollText, setScrollText] = useState(() => cachedSiteSettings?.scrollText || 'Scroll Down For More')
   const [projectMapOpen, setProjectMapOpen] = useState(false)
   const portfolioRef = useRef(null)
   const filterTransitionRef = useRef(null)
@@ -136,12 +137,13 @@ function Home() {
 
   useEffect(() => {
     if (!cachedSiteSettings) {
-      client.fetch(`*[_type == "siteSettings" && _id == "siteSettings"][0]{ heroTitle, heroSubtitle }`)
+      client.fetch(`*[_type == "homePage" && _id == "homePage"][0]{ heroTitle, heroSubtitle, scrollText }`)
         .then(result => {
           if (result) {
             cachedSiteSettings = result
             setHeroTitle(result.heroTitle)
             setHeroSubtitle(result.heroSubtitle)
+            if (result.scrollText) setScrollText(result.scrollText)
           }
         })
         .catch(() => {})
@@ -360,7 +362,7 @@ function Home() {
               : <><span className="greeting">¡Hola! </span>I am a Creative Producer for fashion and luxury. I spend most of my time researching, creating and sharing beautiful content related to my biggest obsessions: <em>Fashion, Food and Flowers</em></>}
           </div>
           <div className="scroll-indicator">
-            Scroll Down For More
+            {scrollText}
             <div className="arrow-down">
               <i className="fas fa-chevron-down"></i>
             </div>

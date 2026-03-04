@@ -1,11 +1,12 @@
 export default {
-  name: 'siteSettings',
-  title: 'Site Settings',
+  name: 'homePage',
+  title: 'Home',
   type: 'document',
+  icon: () => '🏠',
   fields: [
     {
       name: 'heroTitle',
-      title: 'Hero Title',
+      title: 'Hero Heading',
       type: 'array',
       of: [
         {
@@ -21,11 +22,11 @@ export default {
           }
         }
       ],
-      description: 'Large bold headline shown at the top of the hero section.'
+      description: 'The large intro text visitors see first on the homepage.'
     },
     {
       name: 'heroSubtitle',
-      title: 'Hero Subtitle',
+      title: 'Hero Subtext',
       type: 'array',
       of: [
         {
@@ -41,12 +42,19 @@ export default {
           }
         }
       ],
-      description: 'Smaller body text shown below the title.'
+      description: 'Smaller body text shown below the heading.'
+    },
+    {
+      name: 'scrollText',
+      title: 'Scroll Prompt',
+      type: 'string',
+      description: 'Text shown above the scroll arrow (e.g. "Scroll Down For More").',
+      initialValue: 'Scroll Down For More'
     }
   ],
   preview: {
     prepare() {
-      return { title: 'Site Settings' }
+      return {title: 'Home'}
     }
   }
 }

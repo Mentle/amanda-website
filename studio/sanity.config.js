@@ -17,16 +17,40 @@ export default defineConfig({
           .title('Content')
           .items([
             S.listItem()
-              .title('Site Settings')
-              .id('siteSettings')
+              .title('Home')
+              .id('homePage')
               .child(
                 S.document()
-                  .schemaType('siteSettings')
-                  .documentId('siteSettings')
+                  .schemaType('homePage')
+                  .documentId('homePage')
+              ),
+            S.listItem()
+              .title('About')
+              .id('aboutPage')
+              .child(
+                S.document()
+                  .schemaType('aboutPage')
+                  .documentId('aboutPage')
+              ),
+            S.listItem()
+              .title('Services')
+              .id('servicesPage')
+              .child(
+                S.document()
+                  .schemaType('servicesPage')
+                  .documentId('servicesPage')
+              ),
+            S.listItem()
+              .title('Footer')
+              .id('footerSettings')
+              .child(
+                S.document()
+                  .schemaType('footerSettings')
+                  .documentId('footerSettings')
               ),
             S.divider(),
             ...S.documentTypeListItems().filter(
-              (item) => !['siteSettings'].includes(item.getId())
+              (item) => !['homePage', 'aboutPage', 'servicesPage', 'footerSettings'].includes(item.getId())
             ),
           ]),
     }),
