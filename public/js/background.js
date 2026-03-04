@@ -24,8 +24,8 @@ class BackgroundAnimation {
         // Control whether scroll interactions are active (only on home page)
         this.isActive = true;
 
-        // Mouse vectors for model rotation
-        this.mouse = new THREE.Vector2(0, 0);
+        // Mouse vectors for model rotation - initialize off-screen so push sphere doesn't show on load
+        this.mouse = new THREE.Vector2(-9999, -9999);
         this.prevMouse = new THREE.Vector2(0, 0);
         this.mouseVelocity = new THREE.Vector2(0, 0);
         
@@ -78,6 +78,7 @@ class BackgroundAnimation {
         // --- Particle expansion effect ---
         this.expansionProgress = 0;     // goes from 0..1 after scroll > 0.5 (50-100%)
         this.colorProgress = 0;         // goes from 0..1 (51-52% for white transition)
+        this._colorsNeedReset = false;   // tracks whether colors are dirty and need one reset pass
         this.opacityProgress = 0;       // goes from 0..1 (52-53% for opacity fade)
         this.particleGrowthScale = 1.0; // particle size multiplier
         this.particleExpansionOffsets = null; // Persistent random offsets for smooth expansion
@@ -464,6 +465,9 @@ class BackgroundAnimation {
         window.addEventListener('wheel', (e) => {
             if (!this.isActive || !this.isScrollControlActive) return;
             
+            // Don't intercept scroll when project map or other overlays are open
+            if (document.body.classList.contains('overlay-open')) return;
+            
             e.preventDefault();
             
             // Update target scroll based on wheel delta
@@ -489,6 +493,9 @@ class BackgroundAnimation {
         
         window.addEventListener('touchmove', (e) => {
             if (!this.isActive || !this.isScrollControlActive) return;
+
+            // Don't intercept scroll when project map or other overlays are open
+            if (document.body.classList.contains('overlay-open')) return;
 
             // Let InfiniteMenu own touch gestures so drag does not scroll the page.
             if (isTouchingInfiniteMenu || isInfiniteMenuTouchTarget(e.target)) {
@@ -696,6 +703,12 @@ class BackgroundAnimation {
             return;
         }
 
+        // On slow devices, render every other frame (~30fps cap)
+        if (window.__lowPerfMode) {
+            this._skipFrame = !this._skipFrame;
+            if (this._skipFrame) return;
+        }
+
         // Update points (main model’s dissolve/mouse logic)
         this.updatePoints();
 
@@ -753,43 +766,51 @@ class BackgroundAnimation {
         // Disable breathing if fully dissolved
         const disableBreathing = this.disperseProgress >= 0.87;
 
+        // Pre-compute flags outside the hot loop
+        const hasColorTransition = this.colorProgress > 0;
+        if (hasColorTransition) this._colorsNeedReset = true;
+        const mouseOnScreen = !this.disableMouseInteraction && this.mouse.x > -9000;
+        const colorInv = 1 - this.colorProgress;
+        const targetColor = 0.992; // #FDFDFD in RGB (253/255)
+
         // Regular point updates
         for (let i = 0; i < positions.length; i += 3) {
             const idx = i / 3;
             
             // Color transition: turn white (50-53% scroll), separate from expansion
-            if (this.colorProgress > 0) {
-                const targetColor = 0.992; // #FDFDFD in RGB (253/255)
-                colors[i] = this.originalColors[i] * (1 - this.colorProgress) + targetColor * this.colorProgress;
-                colors[i + 1] = this.originalColors[i + 1] * (1 - this.colorProgress) + targetColor * this.colorProgress;
-                colors[i + 2] = this.originalColors[i + 2] * (1 - this.colorProgress) + targetColor * this.colorProgress;
-            } else {
+            // Skip copy when colorProgress is 0 and colors already match original (steady state)
+            if (hasColorTransition) {
+                colors[i] = this.originalColors[i] * colorInv + targetColor * this.colorProgress;
+                colors[i + 1] = this.originalColors[i + 1] * colorInv + targetColor * this.colorProgress;
+                colors[i + 2] = this.originalColors[i + 2] * colorInv + targetColor * this.colorProgress;
+            } else if (this._colorsNeedReset) {
                 colors[i] = this.originalColors[i];
                 colors[i + 1] = this.originalColors[i + 1];
                 colors[i + 2] = this.originalColors[i + 2];
             }
 
-            // --- Mouse “push” effect, radius-based ---
-            const screenX = positions[i] / scale;
-            const screenY = positions[i + 1] / scale;
-            const dx = screenX - this.mouse.x;
-            const dy = screenY - this.mouse.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            // --- Mouse "push" effect, radius-based ---
+            // Skip entirely when mouse is off-screen (initial state or mouseleave)
+            if (mouseOnScreen) {
+                const screenX = positions[i] / scale;
+                const screenY = positions[i + 1] / scale;
+                const dx = screenX - this.mouse.x;
+                const dy = screenY - this.mouse.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Gentle push radius - only if mouse interaction is enabled
-            const radius = 0.4;
-            if (!this.disableMouseInteraction && distance < radius) {
-                const t = distance / radius;
-                const smoothForce = 1 - (t * t * (3 - 2 * t));
-                const force = smoothForce * 0.1;
-                const velocityInfluence = 1.5;
+                const radius = 0.4;
+                if (distance < radius) {
+                    const t = distance / radius;
+                    const smoothForce = 1 - (t * t * (3 - 2 * t));
+                    const force = smoothForce * 0.1;
+                    const velocityInfluence = 1.5;
 
-                this.velocities[i] += this.mouseVelocity.x * velocityInfluence * scale * force;
-                this.velocities[i + 1] += this.mouseVelocity.y * velocityInfluence * scale * force;
+                    this.velocities[i] += this.mouseVelocity.x * velocityInfluence * scale * force;
+                    this.velocities[i + 1] += this.mouseVelocity.y * velocityInfluence * scale * force;
 
-                // Gentle push away from mouse
-                this.velocities[i] += (dx / distance) * force * scale * 0.5;
-                this.velocities[i + 1] += (dy / distance) * force * scale * 0.5;
+                    this.velocities[i] += (dx / distance) * force * scale * 0.5;
+                    this.velocities[i + 1] += (dy / distance) * force * scale * 0.5;
+                }
             }
 
             // --- Dispersion (dissolve) logic ---
@@ -821,6 +842,11 @@ class BackgroundAnimation {
                 positions[i + 1] = this.originalPositions[i + 1] + offsetY + this.velocities[i + 1];
                 positions[i + 2] = this.originalPositions[i + 2] + offsetZ + this.velocities[i + 2];
             }
+        }
+
+        // After the loop: if we just did a color reset pass, mark it complete
+        if (!hasColorTransition && this._colorsNeedReset) {
+            this._colorsNeedReset = false;
         }
 
         // --- NEW: Particle expansion to fill screen ---

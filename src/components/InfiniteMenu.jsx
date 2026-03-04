@@ -455,7 +455,8 @@ function makeVertexArray(gl, bufLocNumElmPairs, indices) {
 }
 
 function resizeCanvasToDisplaySize(canvas) {
-  const dpr = Math.min(2, window.devicePixelRatio);
+  const maxDpr = window.__lowPerfMode ? 1 : 2;
+  const dpr = Math.min(maxDpr, window.devicePixelRatio);
   const displayWidth = Math.round(canvas.clientWidth * dpr);
   const displayHeight = Math.round(canvas.clientHeight * dpr);
   const needResize = canvas.width !== displayWidth || canvas.height !== displayHeight;
@@ -504,6 +505,16 @@ class ArcballControl {
     this._rotationVelocity = 0;
     this._combinedQuat = quat.create();
 
+    // Pre-allocated temporaries for update()
+    this._tmpMidPointer = vec2.create();
+    this._tmpProjP = vec3.create();
+    this._tmpProjQ = vec3.create();
+    this._tmpNormA = vec3.create();
+    this._tmpNormB = vec3.create();
+    this._tmpSnapRot = quat.create();
+    this._tmpCombined = quat.create();
+    this._tmpCrossAxis = vec3.create();
+
     canvas.addEventListener('pointerdown', e => {
       vec2.set(this.pointerPos, e.clientX, e.clientY);
       vec2.copy(this.previousPointerPos, this.pointerPos);
@@ -527,22 +538,23 @@ class ArcballControl {
   update(deltaTime, targetFrameDuration = 16) {
     const timeScale = deltaTime / targetFrameDuration + 0.00001;
     let angleFactor = timeScale;
-    let snapRotation = quat.create();
+    const snapRotation = this._tmpSnapRot;
+    quat.identity(snapRotation);
 
     if (this.isPointerDown) {
       const INTENSITY = 0.3 * timeScale;
       const ANGLE_AMPLIFICATION = 5 / timeScale;
 
-      const midPointerPos = vec2.sub(vec2.create(), this.pointerPos, this.previousPointerPos);
+      const midPointerPos = vec2.sub(this._tmpMidPointer, this.pointerPos, this.previousPointerPos);
       vec2.scale(midPointerPos, midPointerPos, INTENSITY);
 
       if (vec2.sqrLen(midPointerPos) > this.EPSILON) {
         vec2.add(midPointerPos, this.previousPointerPos, midPointerPos);
 
-        const p = this.#project(midPointerPos);
-        const q = this.#project(this.previousPointerPos);
-        const a = vec3.normalize(vec3.create(), p);
-        const b = vec3.normalize(vec3.create(), q);
+        this.#projectInto(midPointerPos, this._tmpProjP);
+        this.#projectInto(this.previousPointerPos, this._tmpProjQ);
+        const a = vec3.normalize(this._tmpNormA, this._tmpProjP);
+        const b = vec3.normalize(this._tmpNormB, this._tmpProjQ);
 
         vec2.copy(this.previousPointerPos, midPointerPos);
 
@@ -567,8 +579,8 @@ class ArcballControl {
       }
     }
 
-    const combinedQuat = quat.multiply(quat.create(), snapRotation, this.pointerRotation);
-    this.orientation = quat.multiply(quat.create(), combinedQuat, this.orientation);
+    const combinedQuat = quat.multiply(this._tmpCombined, snapRotation, this.pointerRotation);
+    quat.multiply(this.orientation, combinedQuat, this.orientation);
     quat.normalize(this.orientation, this.orientation);
 
     const RA_INTENSITY = 0.8 * timeScale;
@@ -593,15 +605,14 @@ class ArcballControl {
   }
 
   quatFromVectors(a, b, out, angleFactor = 1) {
-    const axis = vec3.cross(vec3.create(), a, b);
+    const axis = vec3.cross(this._tmpCrossAxis, a, b);
     vec3.normalize(axis, axis);
     const d = Math.max(-1, Math.min(1, vec3.dot(a, b)));
     const angle = Math.acos(d) * angleFactor;
     quat.setAxisAngle(out, axis, angle);
-    return { q: out, axis, angle };
   }
 
-  #project(pos) {
+  #projectInto(pos, out) {
     const r = 2;
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
@@ -618,7 +629,8 @@ class ArcballControl {
     } else {
       z = rSq / Math.sqrt(xySq);
     }
-    return vec3.fromValues(-x, y, z);
+    vec3.set(out, -x, y, z);
+    return out;
   }
 }
 
@@ -653,6 +665,20 @@ class InfiniteGridMenu {
   activeItemIndex = -1;
   formationProgress = 1.0; // 0 = scattered, 1 = formed sphere
   scatteredPositions = []; // Random initial positions for fly-in effect
+
+  // Pre-allocated temporaries to avoid per-frame GC pressure
+  _tmpVec3 = vec3.create();
+  _tmpVec3b = vec3.create();
+  _tmpMat4 = mat4.create();
+  _tmpMat4b = mat4.create();
+  _tmpMat4c = mat4.create();
+  _tmpMat4d = mat4.create();
+  _tmpScaleVec = vec3.create();
+  _tmpTransVec = vec3.create();
+  _tmpSnapDir = vec3.create();
+  _tmpInvQuat = quat.create();
+  _tmpNt = vec3.create();
+  _tmpWorldPos = vec3.create();
 
   constructor(canvas, items, onActiveItemChange, onMovementChange, onInit = null, scale = 1.0) {
     this.canvas = canvas;
@@ -694,6 +720,14 @@ class InfiniteGridMenu {
 
     // Skip heavy work when menu is not visible (orchid section)
     if (this.formationProgress > 0) {
+      // On slow devices, render every other frame (~30fps cap)
+      if (window.__lowPerfMode) {
+        this._skipFrame = !this._skipFrame;
+        if (this._skipFrame) {
+          this._rafId = requestAnimationFrame(t => this.run(t));
+          return;
+        }
+      }
       this.#animate(this.#deltaTime);
       this.#render();
     }
@@ -801,7 +835,8 @@ class InfiniteGridMenu {
     );
 
     this.icoGeo = new IcosahedronGeometry();
-    this.icoGeo.subdivide(2).spherize(this.SPHERE_RADIUS);
+    const subdivisions = window.__lowPerfMode ? 1 : 2;
+    this.icoGeo.subdivide(subdivisions).spherize(this.SPHERE_RADIUS);
     this.instancePositions = this.icoGeo.vertices.map(v => v.position);
     this.DISC_INSTANCE_COUNT = this.icoGeo.vertices.length;
     this.#initDiscInstances(this.DISC_INSTANCE_COUNT);
@@ -1039,45 +1074,70 @@ class InfiniteGridMenu {
     const gl = this.gl;
     this.control.update(deltaTime, this.TARGET_FRAME_DURATION);
 
-    // Get sphere positions (final positions)
-    let spherePositions = this.instancePositions.map(p => vec3.transformQuat(vec3.create(), p, this.control.orientation));
-    
-    // Interpolate between scattered and sphere positions based on formationProgress
+    const count = this.DISC_INSTANCE_COUNT;
+    const orientation = this.control.orientation;
     const easeProgress = this.#easeOutCubic(this.formationProgress);
-    let positions = spherePositions.map((spherePos, ndx) => {
-      if (this.formationProgress >= 1) return spherePos;
-      if (this.formationProgress <= 0) return this.scatteredPositions[ndx];
-      
-      // Lerp between scattered and sphere position
-      const scattered = this.scatteredPositions[ndx];
-      return vec3.fromValues(
-        scattered[0] + (spherePos[0] - scattered[0]) * easeProgress,
-        scattered[1] + (spherePos[1] - scattered[1]) * easeProgress,
-        scattered[2] + (spherePos[2] - scattered[2]) * easeProgress
-      );
-    });
-    
+    const isFormed = this.formationProgress >= 1;
+    const isScattered = this.formationProgress <= 0;
+
+    // Lazy-allocate reusable position arrays once (avoids .map() allocation every frame)
+    if (!this._spherePositions || this._spherePositions.length !== count) {
+      this._spherePositions = new Array(count);
+      this._finalPositions = new Array(count);
+      for (let i = 0; i < count; i++) {
+        this._spherePositions[i] = vec3.create();
+        this._finalPositions[i] = vec3.create();
+      }
+    }
+
+    // Compute sphere positions in-place
+    for (let i = 0; i < count; i++) {
+      vec3.transformQuat(this._spherePositions[i], this.instancePositions[i], orientation);
+    }
+
+    // Compute final positions (lerp scattered → sphere) in-place
+    for (let i = 0; i < count; i++) {
+      const sp = this._spherePositions[i];
+      if (isFormed) {
+        vec3.copy(this._finalPositions[i], sp);
+      } else if (isScattered) {
+        vec3.copy(this._finalPositions[i], this.scatteredPositions[i]);
+      } else {
+        const sc = this.scatteredPositions[i];
+        const fp = this._finalPositions[i];
+        fp[0] = sc[0] + (sp[0] - sc[0]) * easeProgress;
+        fp[1] = sc[1] + (sp[1] - sc[1]) * easeProgress;
+        fp[2] = sc[2] + (sp[2] - sc[2]) * easeProgress;
+      }
+    }
+
     const scale = 0.15;
     const SCALE_INTENSITY = 0.6;
-    positions.forEach((p, ndx) => {
-      // Use sphere position for scale calculation to keep consistent sizing
-      const sphereP = spherePositions[ndx];
+    const ORIGIN = [0, 0, 0];
+    const UP = [0, 1, 0];
+
+    for (let ndx = 0; ndx < count; ndx++) {
+      const p = this._finalPositions[ndx];
+      const sphereP = this._spherePositions[ndx];
       const s = (Math.abs(sphereP[2]) / this.SPHERE_RADIUS) * SCALE_INTENSITY + (1 - SCALE_INTENSITY);
-      let finalScale = s * scale * easeProgress; // Scale also grows with formation
-      
-      // Scale up the active item
+      let finalScale = s * scale * easeProgress;
+
       if (ndx === this.activeItemIndex) {
         finalScale *= 1.5;
       }
-      
-      const matrix = mat4.create();
-      mat4.multiply(matrix, matrix, mat4.fromTranslation(mat4.create(), vec3.negate(vec3.create(), p)));
-      mat4.multiply(matrix, matrix, mat4.targetTo(mat4.create(), [0, 0, 0], p, [0, 1, 0]));
-      mat4.multiply(matrix, matrix, mat4.fromScaling(mat4.create(), [finalScale, finalScale, finalScale]));
-      mat4.multiply(matrix, matrix, mat4.fromTranslation(mat4.create(), [0, 0, -this.SPHERE_RADIUS]));
 
-      mat4.copy(this.discInstances.matrices[ndx], matrix);
-    });
+      // Reuse pre-allocated temporaries instead of creating new objects
+      vec3.negate(this._tmpVec3, p);
+      vec3.set(this._tmpScaleVec, finalScale, finalScale, finalScale);
+      vec3.set(this._tmpTransVec, 0, 0, -this.SPHERE_RADIUS);
+
+      const m = this.discInstances.matrices[ndx];
+      mat4.identity(m);
+      mat4.multiply(m, m, mat4.fromTranslation(this._tmpMat4, this._tmpVec3));
+      mat4.multiply(m, m, mat4.targetTo(this._tmpMat4b, ORIGIN, p, UP));
+      mat4.multiply(m, m, mat4.fromScaling(this._tmpMat4c, this._tmpScaleVec));
+      mat4.multiply(m, m, mat4.fromTranslation(this._tmpMat4d, this._tmpTransVec));
+    }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.discInstances.buffer);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.discInstances.matricesArray);
@@ -1175,8 +1235,9 @@ class InfiniteGridMenu {
       const itemIndex = this.itemMapping ? this.itemMapping[nearestVertexIndex] : (nearestVertexIndex % Math.max(1, this.items.length));
       this.activeItemIndex = nearestVertexIndex;
       this.onActiveItemChange(itemIndex);
-      const snapDirection = vec3.normalize(vec3.create(), this.#getVertexWorldPosition(nearestVertexIndex));
-      this.control.snapTargetDirection = snapDirection;
+      this.#getVertexWorldPosition(nearestVertexIndex, this._tmpSnapDir);
+      vec3.normalize(this._tmpSnapDir, this._tmpSnapDir);
+      this.control.snapTargetDirection = this._tmpSnapDir;
     } else {
       cameraTargetZ += this.control.rotationVelocity * 80 + 2.5;
       damping = 7 / timeScale;
@@ -1188,8 +1249,9 @@ class InfiniteGridMenu {
 
   #findNearestVertexIndex() {
     const n = this.control.snapDirection;
-    const inversOrientation = quat.conjugate(quat.create(), this.control.orientation);
-    const nt = vec3.transformQuat(vec3.create(), n, inversOrientation);
+    quat.conjugate(this._tmpInvQuat, this.control.orientation);
+    vec3.transformQuat(this._tmpNt, n, this._tmpInvQuat);
+    const nt = this._tmpNt;
 
     let maxD = -1;
     let nearestVertexIndex;
@@ -1203,9 +1265,9 @@ class InfiniteGridMenu {
     return nearestVertexIndex;
   }
 
-  #getVertexWorldPosition(index) {
+  #getVertexWorldPosition(index, out) {
     const nearestVertexPos = this.instancePositions[index];
-    return vec3.transformQuat(vec3.create(), nearestVertexPos, this.control.orientation);
+    return vec3.transformQuat(out || this._tmpWorldPos, nearestVertexPos, this.control.orientation);
   }
 
   // Save the current control state to sessionStorage

@@ -155,6 +155,106 @@
   font-size: 0.85rem;
 }
 
+/* ─── Services section ─────────────────────────────────────────────────── */
+.about-services {
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  text-align: right;
+  margin-left: auto;
+}
+
+.about-service-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.about-service-title {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.2px;
+  color: #0a0a0a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.about-service-subtitle {
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.45);
+  font-style: italic;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+.about-service-description {
+  font-size: 0.97rem;
+  line-height: 1.9;
+  color: rgba(0, 0, 0, 0.65);
+  margin: 0;
+}
+
+.about-service-category {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #0a0a0a;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.about-service-label {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0.5rem 0 0 0;
+  letter-spacing: 0.3px;
+}
+
+.about-service-list {
+  font-size: 0.97rem;
+  line-height: 1.8;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+.about-closing-cta {
+  font-family: 'Cooper Hewitt', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.2px;
+  color: #0a0a0a;
+  margin: 1.5rem 0 0 0;
+  line-height: 1.1;
+}
+
+.about-social-handles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  align-items: flex-end;
+}
+
+.about-social-handles p {
+  font-size: 0.92rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.about-social-handles a {
+  color: rgba(0, 0, 0, 0.45);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.about-social-handles a:hover {
+  color: #000;
+}
+
 /* ─── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .about-page {

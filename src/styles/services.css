@@ -1,22 +1,39 @@
 /* ─── Services Page ───────────────────────────────────────────────────── */
 .services-page {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 62% 38%;
   background: #FDFDFD;
-  padding: 120px 0 80px;
 }
 
-.services-inner {
-  width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 0 2.5rem;
+/* ─── Text column (left) ─────────────────────────────────────────────── */
+.services-text-col {
+  padding: 120px 5rem 80px 5rem;
   display: flex;
   flex-direction: column;
   gap: 0;
-  position: relative;
-  min-height: 60vh;
+  border-right: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+/* ─── Image column (right) ───────────────────────────────────────────── */
+.services-image-col {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.services-image-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.services-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 /* ─── Page title ──────────────────────────────────────────────────────── */
@@ -113,14 +130,32 @@
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .services-page {
-    padding: 100px 0 60px;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
   }
 
-  .services-inner {
-    padding: 0 1.2rem;
+  .services-text-col {
+    padding: 3rem 1.5rem 4rem;
+    border-right: none;
+    order: 2;
+  }
+
+  .services-image-col {
+    position: relative;
+    height: 65vw;
+    min-height: 320px;
+    order: 1;
+  }
+}
+
+@media (max-width: 540px) {
+  .services-image-col {
+    height: 80vw;
+  }
+
+  .services-text-col {
+    padding: 2.5rem 1rem 3rem;
   }
 
   .services-item.active {

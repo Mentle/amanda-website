@@ -4,8 +4,10 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
 import InfiniteMenu from '../components/InfiniteMenu'
+import ProjectMap from '../components/ProjectMap'
 import '../styles/portfolio-filters.css'
 import '../styles/home-portfolio.css'
+import '../styles/project-map.css'
 
 const client = createClient({
   projectId: 'sy1y9q7w',
@@ -22,6 +24,42 @@ let cachedSiteSettings = null
 // Bump this number to force a cache bust after schema/data changes
 const CACHE_VERSION = 2
 
+// Lightweight FPS probe — runs once, sets window.__lowPerfMode for both renderers
+if (typeof window !== 'undefined' && window.__lowPerfMode === undefined) {
+  window.__lowPerfMode = false // default until measured
+  let _probeFrames = 0
+  let _probeStart = 0
+  const PROBE_COUNT = 20
+  const _probeLoop = (ts) => {
+    if (_probeFrames === 0) _probeStart = ts
+    _probeFrames++
+    if (_probeFrames >= PROBE_COUNT) {
+      const elapsed = ts - _probeStart
+      const avgFps = (PROBE_COUNT / elapsed) * 1000
+      window.__lowPerfMode = avgFps < 40
+      const mode = window.__lowPerfMode ? 'LOW' : 'HIGH'
+      console.log(
+        `%c[Perf] ${mode} quality mode %c(${avgFps.toFixed(1)} fps measured)`,
+        `color: ${window.__lowPerfMode ? '#e74c3c' : '#2ecc71'}; font-weight: bold`,
+        'color: gray'
+      )
+      if (window.__lowPerfMode) {
+        console.log(
+          '%c[Perf] Low-perf adaptations active:\n' +
+          '  • Icosphere subdivision: 1 (42 discs instead of 162)\n' +
+          '  • Canvas DPR cap: 1 (instead of 2)\n' +
+          '  • Frame skip: rendering every other frame (~30fps)\n' +
+          '  • Orchid particles: rendering every other frame',
+          'color: #e67e22'
+        )
+      }
+      return
+    }
+    requestAnimationFrame(_probeLoop)
+  }
+  requestAnimationFrame(_probeLoop)
+}
+
 function Home() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -34,6 +72,7 @@ function Home() {
   const [formationProgress, setFormationProgress] = useState(0)
   const [heroTitle, setHeroTitle] = useState(() => cachedSiteSettings?.heroTitle || null)
   const [heroSubtitle, setHeroSubtitle] = useState(() => cachedSiteSettings?.heroSubtitle || null)
+  const [projectMapOpen, setProjectMapOpen] = useState(false)
   const portfolioRef = useRef(null)
   const filterTransitionRef = useRef(null)
 
@@ -333,16 +372,24 @@ function Home() {
       {/* Portfolio section appears in white space after scroll */}
       {!loading && projects.length > 0 && (
         <section ref={portfolioRef} className="portfolio-section" style={{ opacity: 0, pointerEvents: 'none', willChange: 'opacity', transition: 'opacity 0.1s linear' }}>
-          <div className="portfolio-filters">
-            {filters.map(filter => (
-              <button
-                key={filter.value}
-                className={`filter-button ${activeFilter === filter.value ? 'active' : ''}`}
-                onClick={() => handleFilterChange(filter.value)}
+          <div className="portfolio-controls">
+            <div className="portfolio-filters">
+              {filters.map(filter => (
+                <button
+                  key={filter.value}
+                  className={`filter-button ${activeFilter === filter.value ? 'active' : ''}`}
+                  onClick={() => handleFilterChange(filter.value)}
+                >
+                  {filter.label}
+                </button>
+              ))}
+              <button 
+                className="list-view-button"
+                onClick={() => setProjectMapOpen(true)}
               >
-                {filter.label}
+                List View
               </button>
-            ))}
+            </div>
           </div>
           <div style={{ 
             height: '100vh', 
@@ -350,13 +397,19 @@ function Home() {
             position: 'relative', 
             opacity: menuVisible ? 1 : 0, 
             transition: 'opacity 0.3s ease',
-            filter: formationProgress < 1 ? `blur(${(1 - formationProgress) * 8}px)` : 'none',
             pointerEvents: formationProgress < 1 ? 'none' : 'auto'
           }}>
             <InfiniteMenu key={menuKey} items={items} scale={3} formationProgress={formationProgress} menuVisible={menuVisible} />
           </div>
         </section>
       )}
+      
+      <ProjectMap 
+        projects={projects} 
+        isOpen={projectMapOpen} 
+        onClose={() => setProjectMapOpen(false)}
+        urlFor={urlFor}
+      />
     </>
   )
 }

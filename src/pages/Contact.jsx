@@ -24,7 +24,7 @@ function Contact() {
 
   return (
     <div className="services-page">
-      <div className="services-inner">
+      <div className="services-text-col">
         <h1 className="services-page-title">Services</h1>
 
         <ul className="services-list">
@@ -48,6 +48,12 @@ function Contact() {
           <em>Collaborating with teams worldwide in English and Spanish.</em>
         </p>
 
+      </div>
+
+      <div className="services-image-col">
+        <div className="services-image-wrap">
+          <img src="/services.jpeg" alt="Services" />
+        </div>
       </div>
     </div>
   )
